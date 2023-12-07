@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
+  m_Name: woodSword
+  m_EditorClassIdentifier: 
+  data: 5
+  icon: {fileID: 21300000, guid: 3ffed67d6f55bbe458020e61251fa3d1, type: 3}
+  prefab: {fileID: 8291609921023137510, guid: bfed7f9479be02e459e420cb319bac18, type: 3}
+  itemText: 'Wood Sword
+
+    Damage 5
+
+    Made of wood.'
+  address: woodSword.prefab

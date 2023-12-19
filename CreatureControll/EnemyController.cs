@@ -282,8 +282,32 @@ public class EnemyController : AbstractController
                             break;
                     }
                     break;
-
+                //特にプランを持たない種類
                 default:
+
+                    if (this.plan is null)
+                    {
+                        this.plan = EvaluatePlans(this.planList);
+                    }
+
+                    switch (this.plan.goal)
+                    {
+                        case Goal.Walk:
+                            moveCooldown -= Time.deltaTime;
+
+                            if (moveCooldown < 0)
+                            {
+                                CreatureState = State.Move;
+                                moveCooldown = Random.Range(randomRangeMin, randomRangeMax);
+                                SetNavigationCorners(GetRandomPoint());
+                            }
+                            break;
+
+                        case Goal.Battle:
+                            Debug.Log("戦闘開始");
+                            creatureState = State.Battle;
+                            break;
+                    }
                     break;
             }
         }
@@ -353,7 +377,7 @@ public class EnemyController : AbstractController
             //通過点に到着したので、通過点を消す
             navigationCorners.RemoveAt(0);
 
-            if (navigationCorners.Count is 0 && creatureState is not State.Battle)
+            if (navigationCorners.Count is 0 && this.plan.goal is not Goal.Battle)
             {
                 CreatureState = State.Idle;
                 //行動が完了したらプランを初期化
@@ -373,6 +397,8 @@ public class EnemyController : AbstractController
             enemySlots.Enqueue(enemy);
             //行動が完了したらプランを初期化
             this.plan = new Plan(Goal.Battle);
+            this.creatureState = State.Idle;
+            Debug.Log("Battleプランへ移行");
         }
         else
         {
@@ -442,7 +468,6 @@ public class EnemyController : AbstractController
         //寝る場合は索敵コライダを小さくする
         if (bestPlan.goal is Goal.Sleep) GetComponentInChildren<SphereCollider>().radius = 1.5f;
 
-        Debug.Log($"{maxValue}, {bestPlan.goal}");
         return bestPlan;
     }
 }

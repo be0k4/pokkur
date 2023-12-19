@@ -21,7 +21,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     //到着判定フラグ
     protected bool arrived = true;
     //ステート
-    protected State creatureState;
+    [SerializeField] protected State creatureState;
 
     //死亡時のパーティクル
     [SerializeField] protected AssetReferenceT<GameObject> deathEffect;
@@ -39,7 +39,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     [SerializeField] protected NavMeshAgent navigation;
 
     //経路を格納するリスト
-    [SerializeField] protected List<Vector3> navigationCorners = new();
+    protected List<Vector3> navigationCorners = new();
     //敵オブジェクトを格納するキュー
     //default値がない(中身が初期化されない)ので、先頭の要素に後々アクセスするためにnullを入れておく
     protected Queue<GameObject> enemySlots = new(new List<GameObject> { null });

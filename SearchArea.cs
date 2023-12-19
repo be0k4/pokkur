@@ -13,5 +13,6 @@ public class SearchArea : MonoBehaviour
     {
         GameObject enemy = other.gameObject;
         controller.SetEnemySlots(enemy);
+        Debug.Log("エネミーに追加");
     }
 }

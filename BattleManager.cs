@@ -19,10 +19,10 @@ public class BattleManager : MonoBehaviour
     Slider hpSlider;
 
     //ポックルに経験値を与えるためのイベント、攻撃成功時や被弾時にコールバックする
-    public event Action<float> AddPowExp;
-    public event Action<float> AddDexExp;
+    public event Action<float> GivePowExp;
+    public event Action<float> GiveDexExp;
+    public event Action GiveAsExp;
     public event Action <float> AddToExp;
-    public event Action AddAsExp;
     public event Action <float> AddDefExp;
 
     async void Start()
@@ -70,7 +70,7 @@ public class BattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 確率で防御を行い、ダメージ計算をスキップする。
+    /// 確率で防御を行い、成功した場合ダメージ計算をスキップする。
     /// </summary>
     /// <param name="damage"></param>
     /// <returns>防御成功時true</returns>
@@ -79,7 +79,7 @@ public class BattleManager : MonoBehaviour
         //ガード不可もしくは攻撃中はガードできない
         if (creatureStatus.CanGuard is false || creatureStatus.IsAttaking) return false;
         //少数第2位まで求める
-        var mid = Mathf.Round((creatureStatus.Guard + creatureStatus.Dexterity * 0.5f - damage) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2);
+        var mid = Mathf.Round((creatureStatus.Guard + creatureStatus.Dexterity * 0.8f - damage) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2);
         var guard = Mathf.Clamp(mid / 100, 0.01f, 0.9f);
 
         if(guard > Mathf.Round(UnityEngine.Random.Range(0, 1.0f) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2))
@@ -102,7 +102,13 @@ public class BattleManager : MonoBehaviour
     /// <param name="slashDamage"></param>
     void CalculateSlashDamage(float slashDamage)
     {
-        if (Guard(slashDamage)) return;
+        if (Guard(slashDamage)) 
+        {
+            //防御が成功した場合経験値は与えない
+            GivePowExp -= (Action<float>)GivePowExp?.GetInvocationList()[0];
+            GiveAsExp -= (Action)GiveAsExp?.GetInvocationList()[0];
+            return;
+        }
         //ダメージは先に耐性を参照して計算し、その値に軽減率をかける
         float damage = (slashDamage * creatureStatus.SlashResist.GetResist());
         damage = damage - (damage * CalculateToughness());
@@ -110,15 +116,10 @@ public class BattleManager : MonoBehaviour
         UpdateBattleUI(damage, true, PhysicalDamageText);
 
         //経験値を与えるデリゲート関連の処理
-        /*
-        var addPowExp = (Action<float>)(AddPowExp?.GetInvocationList()[0]);
-        if (addPowExp == null) return;
-        addPowExp.Invoke(creatureStatus.Toughness);
-        */
-        AddPowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
-        AddPowExp -= (Action<float>)AddPowExp.GetInvocationList()[0];
-        AddAsExp.GetInvocationList()[0].DynamicInvoke();
-        AddAsExp -= (Action)AddAsExp.GetInvocationList()[0];
+        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke();
+        GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -127,20 +128,22 @@ public class BattleManager : MonoBehaviour
     /// <param name="stabDamage"></param>
     void CalculateStabDamage(float stabDamage)
     {
-        if (Guard(stabDamage)) return;
+        if (Guard(stabDamage))
+        {
+            GiveDexExp -= (Action<float>)GiveDexExp?.GetInvocationList()[0];
+            GiveAsExp -= (Action)GiveAsExp?.GetInvocationList()[0];
+            return;
+        }
 
         float damage = (stabDamage * creatureStatus.StabResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
         UpdateBattleUI(damage, true, PhysicalDamageText);
 
-        //経験値を与えるデリゲート関連の処理
-        var addDexExp = (Action<float>)(AddDexExp?.GetInvocationList()[0]);
-        if (addDexExp == null) return;
-        addDexExp.Invoke(creatureStatus.Toughness);
-        AddDexExp -= (Action<float>)AddDexExp.GetInvocationList()[0];
-        AddAsExp.GetInvocationList()[0].DynamicInvoke();
-        AddAsExp -= (Action)AddAsExp.GetInvocationList()[0];
+        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke();
+        GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -149,7 +152,12 @@ public class BattleManager : MonoBehaviour
     /// <param name="strikeDamage"></param>
     void CalculateStrikeDamage(float strikeDamage)
     {
-        if (Guard(strikeDamage)) return;
+        if (Guard(strikeDamage))
+        {
+            GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
+            GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
+            return;
+        }
 
         float damage = (strikeDamage * creatureStatus.StrikeResist.GetResist());
         damage = damage - (damage * CalculateToughness());
@@ -157,12 +165,10 @@ public class BattleManager : MonoBehaviour
         UpdateBattleUI(damage, true, PhysicalDamageText);
 
         //経験値を与えるデリゲート関連の処理
-        var addPowExp = (Action<float>)(AddPowExp?.GetInvocationList()[0]);
-        if (addPowExp == null) return;
-        addPowExp.Invoke(creatureStatus.Toughness);
-        AddPowExp -= (Action<float>)AddPowExp.GetInvocationList()[0];
-        AddAsExp.GetInvocationList()[0].DynamicInvoke();
-        AddAsExp -= (Action)AddAsExp.GetInvocationList()[0];
+        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke();
+        GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -171,7 +177,11 @@ public class BattleManager : MonoBehaviour
     /// <param name="poisonDamage"></param>
     async void CalculatePoisonDamage(float poisonDamage)
     {
-        if (Guard(poisonDamage)) return;
+        if (Guard(poisonDamage))
+        {
+            GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
+            GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
+        }
 
         //ダメージの一部を毒にする
         var poison = poisonDamage * 0.3f;
@@ -181,20 +191,19 @@ public class BattleManager : MonoBehaviour
         creatureStatus.HealthPoint -= damage;
         UpdateBattleUI(damage, true, PhysicalDamageText);
 
+        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke();
+        GiveAsExp -= (Action)GiveAsExp.GetInvocationList()[0];
+
         //毒ダメージは4秒かけて少しずつ与える
         for (var i = 0; i < 4; i++)
         {
             await UniTask.Delay(1000);
             var dotDamage = Mathf.RoundToInt(poison / 4);
             creatureStatus.HealthPoint -= dotDamage;
-            if (creatureStatus.HealthPoint < 0) return;
             UpdateBattleUI(dotDamage, false, PoisonDamageText);
         }
-
-        //TODO:経験値の処理
-        //独武器のタグと呼び出す処理
-
-
     }
 
     /// <summary>
@@ -211,7 +220,7 @@ public class BattleManager : MonoBehaviour
         //死んだ場合はdestroyされるので処理中断
         if (creatureStatus.HealthPoint <= 0) return;
 
-        //被弾アニメーション再生
+        //被弾アニメーション再生の決定
         creatureStatus.IsAttacked = isAttcked;
 
         //ダメージテキストの生成

@@ -861,7 +861,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
         party = newParty;
         var newStandby = managementWindow.Find("Standby").GetComponentsInChildren<ManagementIcon>().Select(e => e.Pokkur).ToList();
         newStandby.RemoveAll(e => e is null);
-        //standby = newStandby;
         standby.Clear();
         foreach (var pokkur in newStandby)
         {
@@ -950,7 +949,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             var pokkur = Instantiate(prefab, startPositions?[i] ?? data.party[i].position, Quaternion.identity);
 
             Addressables.Release(handle);
-            if (!string.IsNullOrEmpty(data.party[i].weaponAddress))
+            if (string.IsNullOrEmpty(data.party[i].weaponAddress) is false)
             {
                 var weaponHandle = Addressables.LoadAssetAsync<GameObject>(data.party[i].weaponAddress);
                 var weaponPrefab = await weaponHandle.Task;

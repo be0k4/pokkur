@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 敵・味方に共通するインターフェイス
 /// </summary>
-interface ICreature
+public interface ICreature
 {
     //重力
     const float gravity = 5.0f;
@@ -30,11 +30,17 @@ interface ICreature
     const string slash = "Slash";
     const string stab = "Stab";
     const string strike = "Strike";
+    const string poison = "Poison";
 
     //レイヤー
     const int layer_ground = 3;
     const int layer_player = 6;
     const int layer_enemy = 7;
+    const int layer_playerHitBox = 8;
+    const int layer_enemyHitBox = 9;
+    const int layer_playerSearchArea = 10;
+    const int layer_enemySearchArea = 11;
+    const int layer_weapon = 12;
     const int layer_item = 14;
     const int layer_npc = 15;
 
@@ -96,6 +102,7 @@ public enum Species
 {
     Pokkur,
     WolfPokkur,
+    Kobold,
     BetaSaurus,
     Monsieur
 }

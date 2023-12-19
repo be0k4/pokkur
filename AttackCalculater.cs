@@ -17,7 +17,7 @@ public class AttackCalculater : MonoBehaviour
     //攻撃対象と認識するタグ
     string enemyTag;
     //敵の攻撃力
-    [SerializeField, Tooltip("武器を使わない敵の攻撃力")] private float enemyDamage;
+    [SerializeField, Tooltip("アイテムとしての武器を使わない敵の攻撃力")] private float enemyDamage;
 
     void Start()
     {
@@ -41,7 +41,7 @@ public class AttackCalculater : MonoBehaviour
     /// </summary>
     public float CalculateAttackDamage()
     {
-        return (creatureStatus.Power + (creatureStatus.Dexterity * 0.7f) + this.weaponDamage) * 0.5f;
+        return ((creatureStatus.Power * 0.5f) + (creatureStatus.Dexterity * 0.5f) + this.weaponDamage);
     }
 
     //WeaponレイヤーはPlayer/EnemyHitBoxと接触判定
@@ -55,21 +55,23 @@ public class AttackCalculater : MonoBehaviour
             ICreature.slash => $"Calculate{ICreature.slash}Damage",
             ICreature.stab => $"Calculate{ICreature.stab}Damage",
             ICreature.strike => $"Calculate{ICreature.strike}Damage",
+            ICreature.poison => $"Calculate{ICreature.poison}Damage",
             _ => null
         };
 
         //経験値を与えるメソッドを、敵のバトルマネージャー内でコールバックするためにデリゲートへ登録する
         var enemyBattleManager = other.GetComponent<BattleManager>();
-        //スタブかそれ以外かで経験値の種類が変わる
-        if (methodName.Contains($"{ICreature.stab}"))
+        //毒と刺突は技量を成長させる
+        if (methodName.Contains($"{ICreature.stab}") || methodName.Contains($"{ICreature.poison}"))
         {
-            enemyBattleManager.AddDexExp += creatureStatus.AddDexExp;
+            enemyBattleManager.GiveDexExp += creatureStatus.AddDexExp;
         }
+        //斬撃と打撃は力を成長させる
         else
         {
-            enemyBattleManager.AddPowExp += creatureStatus.AddPowExp;
+            enemyBattleManager.GivePowExp += creatureStatus.AddPowExp;
         }
-        enemyBattleManager.AddAsExp += creatureStatus.AddAsExp;
+        enemyBattleManager.GiveAsExp += creatureStatus.AddAsExp;
 
         other.SendMessage(methodName, CalculateAttackDamage());
     }

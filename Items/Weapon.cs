@@ -48,7 +48,7 @@ public class Weapon : MonoBehaviour, ICollectable
     public int CompareTo(ICollectable other)
     {
         int result;
-         switch (other)
+        switch (other)
         {
             case Weapon:
                 result = 0;

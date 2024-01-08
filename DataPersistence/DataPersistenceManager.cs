@@ -25,7 +25,7 @@ public class DataPersistenceManager : MonoBehaviour
     void Awake()
     {
         //シングルトン
-        if(instance is not null)
+        if (instance is not null)
         {
             Debug.LogWarning("一つ以上のインスタンスがシーン上にあります");
             Destroy(this.gameObject);
@@ -63,6 +63,7 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
+    /// <para>メインメニュー内</para>
     /// 最後にセーブしたフォルダをprofileIDに設定する(コンティニュー先の決定)。
     /// </summary>
     public void InitializeSelectedProfileId()
@@ -71,7 +72,8 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// セーブスロットからprofileIDを受け取り、それを元にデータを読み込む。
+    /// <para>メインメニュー内</para>
+    ///　ロードメソッドのprofileIDをを変更する版
     /// </summary>
     public void LoadSelectedProfileId(string newProfileId)
     {
@@ -80,9 +82,9 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// セーブスロットからprofileIDを受け取り、それを元にデータをセーブする。
+    /// <para>インゲーム内</para>
+    /// セーブメソッドのprofileIDを変更する版
     /// </summary>
-    /// <param name="newProfileId"></param>
     public void SaveSelectedProfileId(string newProfileId)
     {
         this.selectedProfileId = newProfileId;
@@ -90,6 +92,7 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
+    /// <para>メインメニュー内</para>
     /// セーブスロットからprofileIDを受け取り、セーブデータオブジェクトを作成する。
     /// </summary>
     public void CreateNewData(string newProfileId)
@@ -100,8 +103,8 @@ public class DataPersistenceManager : MonoBehaviour
 
         //必要に応じて初期設定としてデータを追加する
         newData.inventory.Add("herb.prefab");
-        var skills = new List<Skill>() { Skill.Speedster};
-        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, Resistance.Normal, Resistance.Normal, Resistance.Normal, skills, 100, 5, 0, 0, 0, 0, 0, 
+        var skills = new List<Skill>() { Skill.Speedster };
+        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, Resistance.Normal, Resistance.Normal, Resistance.Normal, skills, 100, 5, 0, 0, 0, 0, 0,
             "pokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
         newData.party.Add(pokkur);
 
@@ -109,6 +112,7 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
+    /// <para>メインメニュー内</para>
     /// セーブスロットからprofileIDを受け取り、ディレクトリを消去する。
     /// </summary>
     public void DeleteData(string profileId)
@@ -121,21 +125,21 @@ public class DataPersistenceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// シーン上の一括ロードを行う。
+    /// シーン上の一括ロードを行う
     /// </summary>
     public void LoadGame()
     {
         //セーブデータをjsonファイルからオブジェクトに変換
-        this.gameData = dataHandler.Load(selectedProfileId);
+        this.gameData = dataHandler.Load<SaveData>(selectedProfileId);
 
-        if(this.gameData is null)
+        if (this.gameData is null)
         {
             Debug.Log("データがありません");
             return;
         }
-        
+
         //IdataPersistenceを実装したオブジェクトに対して一括でセーブオブジェクトからの読み込みを行う
-        foreach(var dataPersistenceObject in dataPersistenceObjects)
+        foreach (var dataPersistenceObject in dataPersistenceObjects)
         {
             dataPersistenceObject.LoadData(this.gameData);
         }
@@ -147,7 +151,7 @@ public class DataPersistenceManager : MonoBehaviour
     public void SaveGame()
     {
         Debug.Log("saved!");
-        if(this.gameData is null)
+        if (this.gameData is null)
         {
             Debug.LogWarning("データがありません。ニューゲームで始める必要があります");
             return;
@@ -164,9 +168,9 @@ public class DataPersistenceManager : MonoBehaviour
         //DateTime構造体をシリアル化するため2進数に変換
         this.gameData.lastUpdated = DateTime.Now.ToBinary();
         //メインメニュー以外でシーン名を保存
-        if(SceneManager.GetActiveScene().name != "MainMenu") this.gameData.sceneName = SceneManager.GetActiveScene().name;
+        if (SceneManager.GetActiveScene().name != "MainMenu") this.gameData.sceneName = SceneManager.GetActiveScene().name;
 
-        //セーブデータをjsonファイルに変換する
+        //セーブデータを保存
         dataHandler.Save(this.gameData, selectedProfileId);
     }
 

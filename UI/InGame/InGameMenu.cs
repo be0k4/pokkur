@@ -1,36 +1,64 @@
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// インゲーム中のメニュー画面
+/// インゲームのメニュー画面
+/// <para>タイトル画面のメニュー機能を一部集約したもの</para>
 /// </summary>
 public class InGameMenu : MonoBehaviour
 {
-    [SerializeField] RectTransform confirmWindow;
+    CancellationToken token;
 
     [Header("メニュー")]
     [SerializeField] RectTransform mainMenu;
     [SerializeField] RectTransform saveSlotsMenu;
+    [SerializeField] RectTransform optionMenu;
 
-    public SaveSlot[] saveSlots;//最初に取得
+    [Header("UI要素")]
+    //セーブ画面のセーブスロット
+    SaveSlot[] saveSlots;
+    //確認ウィンドウ
+    [SerializeField] RectTransform confirmWindow;
 
-    CancellationToken token;
+    [Header("オプション画面")]
+    [SerializeField] Slider seVolumeSlider;
+    [SerializeField] Slider bgmVolumeSlider;
+    [SerializeField] Toggle screenToggle;
+    [SerializeField] TMP_Dropdown resolutionDropdown;
+    [SerializeField] TMP_Dropdown graphicDropdown;
+    [SerializeField] AudioSource uiAudio;
+    BGMAudioManager bgmAudio;
+    Resolution[] resolutions;
+    ConfigData configData;
+    DataFileHandler dataHandler;
+
+    void Awake()
+    {
+        //ロード
+        dataHandler = new(Application.persistentDataPath, "config.json", false);
+        configData = dataHandler.Load<ConfigData>("option");
+    }
 
     void Start()
     {
         saveSlots = GetComponentsInChildren<SaveSlot>(true);
         token = this.GetCancellationTokenOnDestroy();
-
+        bgmAudio = BGMAudioManager.instance;
+        InitializeConfig();
     }
 
-    //メインメニュー関連
-    public void OnActivateSaveSlotsClicked()
+    //メインメニュー関連//
+    public void OnSaveClicked()
     {
         ActivateSaveSlotsMenu();
         DeactiveMainMenu();
     }
+
     public void OnCloseClicked()
     {
         DeactiveMainMenu();
@@ -39,6 +67,11 @@ public class InGameMenu : MonoBehaviour
         Time.timeScale = 1;
     }
 
+    public void OnOptionClicked()
+    {
+        ActivateOptionMenu();
+        DeactiveMainMenu();
+    }
     public void ActivateMainMenu()
     {
         this.mainMenu.gameObject.SetActive(true);
@@ -52,8 +85,8 @@ public class InGameMenu : MonoBehaviour
     }
 
 
-    //セーブスロットメニュー関連
-    public void OnBackClicked()
+    //セーブスロットメニュー関連//
+    public void OnBackClickedInSaveSlotsMenu()
     {
         ActivateMainMenu();
         DeactiveSaveSlotsMenu();
@@ -120,5 +153,99 @@ public class InGameMenu : MonoBehaviour
         }
     }
 
+    //オプションメニュー関連//
 
+    /// <summary>
+    /// GUIの初期化
+    /// </summary>
+    void InitializeConfig()
+    {
+        //ドロップダウン
+        InitializeResolution();
+        InitializeGraphic();
+
+        //se
+        seVolumeSlider.value = configData.uiVolume;
+        //uiだけロード
+        uiAudio.volume = configData.uiVolume;
+
+        //bgm
+        bgmVolumeSlider.value = bgmAudio.GetBGMVolume();
+
+        //ウィンドウ・フルスクリーン
+        screenToggle.isOn = Screen.fullScreen;
+
+        void InitializeResolution()
+        {
+            resolutions = Screen.resolutions;
+            int index = 0;
+            List<string> option = new();
+
+            //現在の解像度と一致するものを探す
+            for (var i = 0; i < resolutions.Length; i++)
+            {
+                if (Screen.width == resolutions[i].width && Screen.height == resolutions[i].height) index = i;
+
+                //取得した解像度一覧を選択肢に追加
+                option.Add($"{resolutions[i].width} x {resolutions[i].height}");
+            }
+
+            resolutionDropdown.AddOptions(option);
+            resolutionDropdown.value = index;
+        }
+
+        void InitializeGraphic()
+        {
+            int index = QualitySettings.GetQualityLevel();
+            var option = QualitySettings.names.ToList();
+            graphicDropdown.AddOptions(option);
+            graphicDropdown.value = index;
+        }
+    }
+
+    public void OnBackClickedInOption()
+    {
+        ActivateMainMenu();
+        DeactiveOptionMenu();
+        //セーブ
+        ConfigData configData =
+            new(seVolumeSlider.value, bgmVolumeSlider.value, Screen.fullScreen, Screen.width, Screen.height, QualitySettings.GetQualityLevel());
+        dataHandler.Save(configData, "option");
+    }
+
+    public void ActivateOptionMenu()
+    {
+        this.optionMenu.gameObject.SetActive(true);
+    }
+
+    public void DeactiveOptionMenu()
+    {
+        this.optionMenu.gameObject.SetActive(false);
+    }
+
+    //UI登録用
+    public void SetUIVolume()
+    {
+        uiAudio.volume = seVolumeSlider.value;
+    }
+
+    public void SetBGMVolume()
+    {
+        bgmAudio.SetBGMVolume(bgmVolumeSlider.value);
+    }
+
+    public void SwitchScreen()
+    {
+        Screen.fullScreen = screenToggle.isOn;
+    }
+
+    public void SetResolution()
+    {
+        Screen.SetResolution(resolutions[resolutionDropdown.value].width, resolutions[resolutionDropdown.value].height, Screen.fullScreen);
+    }
+
+    public void SetQualityLevel()
+    {
+        QualitySettings.SetQualityLevel(graphicDropdown.value);
+    }
 }

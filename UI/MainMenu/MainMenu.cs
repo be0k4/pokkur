@@ -8,7 +8,8 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
     [SerializeField] SaveSlotsMenu saveSlotsMenu;
-    
+    [SerializeField] ConfigMenu configMenu;
+
     [Header("ボタン")]
     [SerializeField] Button newGame;
     [SerializeField] Button continueGame;
@@ -25,17 +26,23 @@ public class MainMenu : MonoBehaviour
         }
     }
 
+    public void OnOptionClicked()
+    {
+        configMenu.ActivateMenu();
+        DeactiveMenu();
+    }
+
     public void OnNewGameClicked()
     {
         //セーブスロットメニューを表示
         saveSlotsMenu.ActivateMenu(false);
-        this.DeactiveMenu();
+        DeactiveMenu();
     }
 
     public void OnLoadGameClicked()
     {
         saveSlotsMenu.ActivateMenu(true);
-        this.DeactiveMenu();
+        DeactiveMenu();
     }
 
     //コンティニュー先のデータは、シーンロード時に初期化済み

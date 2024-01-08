@@ -31,7 +31,7 @@ public class SaveSlot : MonoBehaviour
     public void SetData(SaveData data)
     {
         //•\¦‚ÌØ‚è‘Ö‚¦
-        if(data is null)
+        if (data is null)
         {
             noDataContent.SetActive(true);
             hasDataContent.SetActive(false);

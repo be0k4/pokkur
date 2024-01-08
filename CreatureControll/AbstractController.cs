@@ -61,9 +61,9 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     protected int maxEnemy;
 
     public GameObject AttackTarget { get => attackTarget; set => attackTarget = value; }
-    public bool IsBattling { get => isBattling;}
+    public bool IsBattling { get => isBattling; }
     public State CreatureState { get => creatureState; set => creatureState = value; }
-    public Queue<GameObject> EnemySlots { get => enemySlots;}
+    public Queue<GameObject> EnemySlots { get => enemySlots; }
     public int AvailableEnemyCount { get => availableEnemyCount; set => availableEnemyCount = Mathf.Clamp(value, 0, maxEnemy); }
     public int MaxEnemy { get => maxEnemy; }
 
@@ -194,7 +194,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
             //通過点に到着したので、通過点を消す
             navigationCorners.RemoveAt(0);
 
-            if (navigationCorners.Count is 0　&& creatureState is not State.Battle)
+            if (navigationCorners.Count is 0 && creatureState is not State.Battle)
             {
                 CreatureState = State.Idle;
             }

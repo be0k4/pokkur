@@ -28,16 +28,18 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
     /// <summary>
     /// <para>trueの場合UI操作ができない。以下の場合trueになる</para>
-    /// dialogueWindow
-    /// inputNameWindow
-    /// managementWindow
-    /// confirmWindow
+    /// dialogueWindow,
+    /// inputNameWindow,
+    /// managementWindow,
+    /// confirmWindow,
     /// のいずれかを表示中もしくは
-    /// ロード中
+    /// シーンの初期化中
     /// </summary>
     public static bool invalid = true;
 
-    //ダンジョンにいるかどうか
+    /// <summary>
+    /// ダンジョンにいるかどうか
+    /// </summary>
     public static bool isInDungeon;
 
     //現在操作中のキャラクターのカメラ：初期値はパーティの先頭
@@ -112,9 +114,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
     event Action weatherChangedTrigger;
 
     //3：地面 6：キャラクター 7:エネミー 14:アイテム
-    int layerMask = 1 << 3 | 1 << 6 | 1 << 7 | 1 << 14 ;
+    int layerMask = 1 << 3 | 1 << 6 | 1 << 7 | 1 << 14;
 
-    public List<GameObject> Party { get => party;}
+    public List<GameObject> Party { get => party; }
 
     async UniTask Start()
     {
@@ -124,7 +126,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         switch (weatherState)
         {
             case Weather.Dungeon:
-                BGMAudioManager.instance.PlayDungeonClip(dayMusic);
+                await BGMAudioManager.instance.SwapTrack(dayMusic);
                 break;
             case Weather.Day:
                 await BGMAudioManager.instance.SwapTrack(dayMusic);
@@ -195,7 +197,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         this.weatherState = weatherState;
         RenderSettings.skybox = skyBox;
 
-        if(weatherState is Weather.Day or Weather.Night)
+        if (weatherState is Weather.Day or Weather.Night)
         {
             directionalLight.enabled = true;
         }
@@ -230,7 +232,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //ダンジョン内ではライトが追従する
         if (weatherState is Weather.Dungeon)
         {
-            if(activeObject != null) directionalLight.transform.position = activeObject.transform.position + offset;
+            if (activeObject != null) directionalLight.transform.position = activeObject.transform.position + offset;
             return;
         }
 
@@ -418,7 +420,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //スキルとスキル説明の更新
         for (int i = 0; i < this.skills.Length; i++)
         {
-            if(i < status.Skills?.Count)
+            if (i < status.Skills?.Count)
             {
                 this.skills[i].SetSkillText(status.Skills[i].ToString(), status.Skills[i].GetDescription());
             }
@@ -447,9 +449,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //パーティアイコンウィンドウのボタンを取得
         List<Button> buttons = partyWindow.GetComponentsInChildren<Button>().ToList();
 
-        for(var i = 0; i < icons.Count; i++)
+        for (var i = 0; i < icons.Count; i++)
         {
-            if(i < party.Count)
+            if (i < party.Count)
             {
                 //アイコン画像を設定
                 icons[i].color = new Color32(255, 255, 255, 255);
@@ -461,7 +463,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 //アイコンボタンにメソッドを登録
                 buttons[i].interactable = true;
                 int lamdaIndex = i;
-                buttons[i].onClick.AddListener( () => { ChangeActiveCharacterCamera(lamdaIndex); });
+                buttons[i].onClick.AddListener(() => { ChangeActiveCharacterCamera(lamdaIndex); });
 
                 //パーティの先頭はisFollowerをオフ、それ以外は追従対象を設定する                
                 if (i == 0)
@@ -489,7 +491,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         }
 
         //カメラとステータスウィンドウの切り替え処理(ボタン登録用)
-         void ChangeActiveCharacterCamera(int index)
+        void ChangeActiveCharacterCamera(int index)
         {
             activeObject = party[index];
             if (activeCamera is not null)//null参照回避
@@ -542,15 +544,15 @@ public class GameManager : MonoBehaviour, IDataPersistence
             Time.timeScale = 0;
 
             //登録された消費アイテムを初期化
-            foreach(var e in iconFrames)
+            foreach (var e in iconFrames)
             {
                 e.ConsumableItems.Clear();
             }
 
             //インベントリウィンドウ
-            for(var i = 0; i < inventorySize; i++)
+            for (var i = 0; i < inventorySize; i++)
             {
-                if(i < inventory.Count())
+                if (i < inventory.Count())
                 {
                     icons[i].Item = inventory[i];
                     Image image = icons[i].GetComponent<Image>();
@@ -570,7 +572,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //装備品ウィンドウ
             for (var i = 0; i < ICreature.partyLimit; i++)
             {
-                if(i < party.Count())
+                if (i < party.Count())
                 {
                     equipmentIcons[i].Item = party[i].GetComponentInChildren<Weapon>();
                     Image image = equipmentIcons[i].GetComponent<Image>();
@@ -598,8 +600,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
             inventory = icons.Select((e) => e.Item).ToList().OrderByDescending(e => e).ThenBy(e => e.GetItemData().itemText).ToList(); ;
 
             //装備品ウィンドウをpokkurに反映
-            var equipmentFrames = equipmentWindow.GetComponentsInChildren<EquipmentFrame>().ToList().Where(e => e.Changed).Select(e => new{ e.Index, e.Item }).ToList();
-            for(var i = 0; i< equipmentFrames.Count(); i++)
+            var equipmentFrames = equipmentWindow.GetComponentsInChildren<EquipmentFrame>().ToList().Where(e => e.Changed).Select(e => new { e.Index, e.Item }).ToList();
+            for (var i = 0; i < equipmentFrames.Count(); i++)
             {
                 //対象の武器を削除
                 Weapon existingWeapon = party[equipmentFrames[i].Index].GetComponentInChildren<Weapon>();
@@ -625,7 +627,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
             //アイテム効果をpokkurに反映
             var usedItems = iconFrames.Where(e => e.ConsumableItems.Count() > 0).Select(e => new { e.Index, e.ConsumableItems });
-            foreach(var e in usedItems)
+            foreach (var e in usedItems)
             {
                 foreach (var item in e.ConsumableItems)
                 {
@@ -713,10 +715,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// 第一引数のポックルを仲間に加える。
+    /// 引数のポックルを仲間に加える。
     /// </summary>
     /// <param name="pokkur">仲間になるポックル</param>
-    /// <param name="token"></param>
     /// <returns>ヒントを表示するか。成功した場合false、失敗した場合true。</returns>
     public async UniTask<bool> Recruit(GameObject pokkur, CancellationToken token)
     {
@@ -753,9 +754,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// シーン遷移や、会話の際に行うチェック処理。
+    /// シーン遷移や会話の際に、パーティの状態とオブジェクトとの距離をチェックする
     /// </summary>
-    /// <param name="target"></param>
     /// <returns>準備完了ならtrue</returns>
     public bool CheckPartyIsReady(Transform target)
     {
@@ -770,10 +770,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// <summary>
     /// パーティ管理を行う。
     /// </summary>
-    /// <param name="standby"></param>
-    /// <param name="standbyPositionList"></param>
-    /// <param name="token"></param>
-    /// <returns></returns>
     public async UniTask ManageParty(List<GameObject> standby, List<Transform> standbyPositionList, CancellationToken token)
     {
         //パーティ4、待機所4でドラッグ可能なUIを表示。
@@ -866,7 +862,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             standby.Add(pokkur);
         }
-        
+
         //新しいパーティに更新する
         UpdateParty();
         //tranformとコンポーネントをセットアップ
@@ -934,7 +930,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             startPositions = startPosition.GetComponentsInChildren<Transform>().Select(e => e.position).ToList();
             startPositions.RemoveAt(0);
         }
-        
+
 
         for (var i = 0; i < data.party.Count; i++)
         {
@@ -987,7 +983,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //ロード完了
         invalid = false;
     }
-    
+
     //以下を保存する
     //ゲーム内時間
     //天候ステート
@@ -1001,7 +997,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         data.weatherState = isInDungeon ? data.weatherState : this.weatherState;
 
         data.inventory.Clear();
-        foreach(var item in inventory)
+        foreach (var item in inventory)
         {
             var address = item.GetItemData().address;
             data.inventory.Add(address);
@@ -1012,7 +1008,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         data.party.Clear();
 
-        for(var i = 0; i < party.Count; i++)
+        for (var i = 0; i < party.Count; i++)
         {
             var name = party[i].GetComponentInChildren<TextMeshProUGUI>().text;
             var parameter = party[i].GetComponentInChildren<CreatureStatus>();

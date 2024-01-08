@@ -41,11 +41,11 @@ public class DataFileHandler
             var fullPath = Path.Combine(dataDirPath, profileId, dataFileName);
             if (File.Exists(fullPath) is false)
             {
-                Debug.LogError($"このディレクトリ　{profileId}　にはデータが存在しません");
+                Debug.LogError($"このディレクトリ　{profileId}　にはセーブデータが存在しません。スキップします。");
                 continue;
             }
 
-            var saveData = Load(profileId);
+            SaveData saveData = Load<SaveData>(profileId);
 
             if (saveData is not null) profileDictionary.Add(profileId, saveData);
         }
@@ -54,15 +54,16 @@ public class DataFileHandler
     }
 
     /// <summary>
-    /// 一意のID名フォルダ内のjsonファイルを読み込んでセーブデータオブジェクトに変換する
+    /// 一意のID名フォルダ内のjsonファイルを読み込んで。セーブデータオブジェクトに変換する。
+    /// <para>ジェネリック型には、ゲームデータはSaveData、オプション設定はConfiDataを指定</para>
     /// </summary>
-    public SaveData Load(string profileId)
+    public T Load<T>(string profileId) where T : class, ISavable
     {
         if (profileId is null) return null;
 
         //OSごとの区切り文字の差を無くす
         var fullPath = Path.Combine(dataDirPath, profileId, dataFileName);
-        SaveData data = null;
+        T data = null;
 
         if (File.Exists(fullPath))
         {
@@ -81,11 +82,11 @@ public class DataFileHandler
                 //選択的に可読化
                 if (useEncryption) saveDataJson = EncryptDecrypt(saveDataJson);
 
-                data = JsonUtility.FromJson<SaveData>(saveDataJson);
+                data = JsonUtility.FromJson<T>(saveDataJson);
             }
             catch (Exception e)
             {
-                Debug.LogError($"{fullPath}からロードを行う際にエラーが発生しました。\ne");
+                Debug.LogError($"{fullPath}からロードを行う際にエラーが発生しました。\n{e.StackTrace}");
             }
         }
 
@@ -93,11 +94,10 @@ public class DataFileHandler
     }
 
     /// <summary>
-    /// セーブデータオブジェクトを受け取り、一意のID名フォルダを作成し、jsonファイルに書き込む。
+    /// データオブジェクトを受け取り、一意のID名フォルダを作成し、jsonファイルに書き込む。
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="profileId"></param>
-    public void Save(SaveData data, string profileId)
+    /// <param name="data">ゲームデータはSaveData、オプション設定はConfiDataを指定</param>
+    public void Save<T>(T data, string profileId) where T : class, ISavable
     {
         if (profileId is null) return;
 
@@ -111,7 +111,7 @@ public class DataFileHandler
             var saveDataJson = JsonUtility.ToJson(data, true);
 
             //選択的に暗号化を行う
-            if (useEncryption) saveDataJson = EncryptDecrypt(saveDataJson); 
+            if (useEncryption) saveDataJson = EncryptDecrypt(saveDataJson);
 
             //ファイルへの書き込み
             using (var stream = new FileStream(fullPath, FileMode.Create))
@@ -126,7 +126,7 @@ public class DataFileHandler
         }
         catch (Exception e)
         {
-            Debug.LogError($"{fullPath}にセーブを行う際にエラーが発生しました。\ne");
+            Debug.LogError($"{fullPath}にセーブを行う際にエラーが発生しました。\n{e.StackTrace}");
         }
     }
 
@@ -149,7 +149,7 @@ public class DataFileHandler
                 Debug.LogWarning($"{fullPath}にファイルが見つかりませんでした。");
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"{profileId}ディレクトリの削除時にエラーが発生しました。\n{e.StackTrace}");
         }
@@ -182,10 +182,10 @@ public class DataFileHandler
     private string EncryptDecrypt(string data)
     {
         var sb = new StringBuilder();
-        for(var i =0; i < data.Length; i++)
+        for (var i = 0; i < data.Length; i++)
         {
             sb.Append((char)(data[i] ^ encryptionCodeWord[i % encryptionCodeWord.Length]));
         }
-         return sb.ToString();
+        return sb.ToString();
     }
 }

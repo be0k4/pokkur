@@ -44,7 +44,7 @@ public class PokkurController : AbstractController
     {
 
         if (characterController.isGrounded)
-        {           
+        {
             //全ステート共通処理
             SetDestination();
             Move();
@@ -58,13 +58,13 @@ public class PokkurController : AbstractController
                     if (isFollowing && OverDistance(followingTarget.position, ICreature.stoppingDistance))
                     {
                         SetNavigationCorners(followingTarget.position);
-                        
+
                     }
                     //追従中にトグルから追従をやめさせた場合
                     else
                     {
                         destination = transform.position;
-                        if(navigationCorners.Count > 1) navigationCorners.RemoveRange( 1, navigationCorners.Count -1);
+                        if (navigationCorners.Count > 1) navigationCorners.RemoveRange(1, navigationCorners.Count - 1);
                     }
                     Stop(ICreature.stoppingDistance);
                     break;
@@ -108,9 +108,9 @@ public class PokkurController : AbstractController
 
                             //攻撃対象の有効エネミーカウントがいっぱいだった場合に、他の敵を攻撃対象にする
                             ShiftSlots();
-                            
+
                         }
-                     //戦闘中
+                        //戦闘中
                         else
                         {
                             if (OverDistance(attackTarget.transform.position, ICreature.battleDistance))

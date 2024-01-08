@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// jsonにするデータを保持するクラス
 /// </summary>
 [System.Serializable]
-public class SaveData
+public class SaveData : ISavable
 {
     //シーン名はロード、コンティニュー時に使用する
     public string sceneName;

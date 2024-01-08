@@ -1,6 +1,5 @@
 using Cinemachine;
 using System;
-using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -12,7 +11,7 @@ public class PrefabInitializer : EditorWindow
     GameObject prefab;
     GameObject weapon;
     int index;
-    string[] weaponTags = new string[]{ ICreature.poison, ICreature.slash, ICreature.stab, ICreature.strike};
+    string[] weaponTags = new string[] { ICreature.poison, ICreature.slash, ICreature.stab, ICreature.strike };
     bool isAvailableWeapon;
 
     [MenuItem("EditorExtensions/PrefabInitializer")]
@@ -30,13 +29,13 @@ public class PrefabInitializer : EditorWindow
         prefabType = (PrefabType)EditorGUILayout.EnumPopup("作成したいprefabの種類", prefabType);
         prefab = (GameObject)EditorGUILayout.ObjectField("prefab", prefab, typeof(GameObject), true);
 
-        if(prefabType is PrefabType.Weapon)
+        if (prefabType is PrefabType.Weapon)
         {
             index = EditorGUILayout.Popup("武器の種類", index, weaponTags);
             isAvailableWeapon = EditorGUILayout.Toggle("アイテムとして取得可能か", isAvailableWeapon);
         }
 
-        if(prefab != null && GUILayout.Button("セットアップ"))
+        if (prefab != null && GUILayout.Button("セットアップ"))
         {
             switch (prefabType)
             {
@@ -44,7 +43,7 @@ public class PrefabInitializer : EditorWindow
                     InitializePlayerObject();
                     break;
 
-                case PrefabType.Recruitable 
+                case PrefabType.Recruitable
                 //プレイヤーprefabとしてセットアップ済みかつ、武器の設定も済んでいる
                 when prefab.tag is ICreature.player && prefab.GetComponentInChildren<Weapon>() is not null:
                     InitializeRecruitableObject();
@@ -125,7 +124,7 @@ public class PrefabInitializer : EditorWindow
             {
                 DestroyImmediate(weapon.transform.GetChild(0).gameObject);
             }
-            catch(InvalidOperationException e)
+            catch (InvalidOperationException e)
             {
                 Debug.LogError("prefabの一部なのでコライダを削除できませんでした。手動でコライダを削除してください。");
             }

@@ -22,8 +22,8 @@ public class BattleManager : MonoBehaviour
     public event Action<float> GivePowExp;
     public event Action<float> GiveDexExp;
     public event Action GiveAsExp;
-    public event Action <float> AddToExp;
-    public event Action <float> AddDefExp;
+    public event Action<float> AddToExp;
+    public event Action<float> AddDefExp;
 
     async void Start()
     {
@@ -35,7 +35,7 @@ public class BattleManager : MonoBehaviour
         hpSlider.value = creatureStatus.HealthPoint;
 
         //コールバック用メソッドをデリゲートへ登録
-        if(this.tag == ICreature.player)
+        if (this.tag == ICreature.player)
         {
             AddToExp += creatureStatus.AddToExp;
             AddDefExp += creatureStatus.AddDefExp;
@@ -82,7 +82,7 @@ public class BattleManager : MonoBehaviour
         var mid = Mathf.Round((creatureStatus.Guard + creatureStatus.Dexterity * 0.8f - damage) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2);
         var guard = Mathf.Clamp(mid / 100, 0.01f, 0.9f);
 
-        if(guard > Mathf.Round(UnityEngine.Random.Range(0, 1.0f) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2))
+        if (guard > Mathf.Round(UnityEngine.Random.Range(0, 1.0f) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2))
         {
             //防御成功
             creatureStatus.IsGuarding = true;
@@ -102,7 +102,7 @@ public class BattleManager : MonoBehaviour
     /// <param name="slashDamage"></param>
     void CalculateSlashDamage(float slashDamage)
     {
-        if (Guard(slashDamage)) 
+        if (Guard(slashDamage))
         {
             //防御が成功した場合経験値は与えない
             GivePowExp -= (Action<float>)GivePowExp?.GetInvocationList()[0];
@@ -232,7 +232,8 @@ public class BattleManager : MonoBehaviour
         {
             damageUI.GetComponent<TextMeshProUGUI>().fontSize = 100;
 
-        }else if (damage > 9.5f)
+        }
+        else if (damage > 9.5f)
         {
             damageUI.GetComponent<TextMeshProUGUI>().fontSize = 75;
         }

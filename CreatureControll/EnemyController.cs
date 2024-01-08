@@ -25,7 +25,7 @@ public class EnemyController : AbstractController
     [SerializeField] int dropRate;
 
     [Header("AI関連")]
-    [SerializeField]Plan plan = null;
+    [SerializeField] Plan plan = null;
     [SerializeField, Tooltip("行動決定時の評価対象となるプランを格納するリスト")] List<Plan> planList;
 
     void Start()
@@ -35,7 +35,7 @@ public class EnemyController : AbstractController
         //パラメータの取得
         movementSpeed = creatureStatus.MovementSpeed;
         attackSpeed = creatureStatus.AttackSpeed * 0.01f;
-        attackCooldown  = ICreature.attackCooldown * (1.0f - (0.5f * attackSpeed));
+        attackCooldown = ICreature.attackCooldown * (1.0f - (0.5f * attackSpeed));
         maxEnemy = creatureStatus.MaxEnemy;
     }
 
@@ -70,17 +70,17 @@ public class EnemyController : AbstractController
                     Dead();
                     UpdateAttackTarget();
                     if (attackTarget == null) break;
-                    
+
                     //離れている場合待機距離まで近づく
                     if (Vector3.Distance(transform.position, attackTarget.transform.position) is < ICreature.trackingDistance and > ICreature.waitDistance)
                     {
                         SetNavigationCorners(attackTarget.transform.position);
                     }
                     //ポックルが逃げたら追うのをやめる
-                    else if (OverDistance(attackTarget.transform.position, ICreature.trackingDistance) )
+                    else if (OverDistance(attackTarget.transform.position, ICreature.trackingDistance))
                     {
                         Debug.Log("逃げられた！");
-                        
+
                         //敵が死んだことにする
                         var list = enemySlots.ToList();
                         list[0] = null;
@@ -104,12 +104,12 @@ public class EnemyController : AbstractController
                                 enemyController.AvailableEnemyCount++;
                                 goto BATTLESTART;
                             }
-                            
+
                             //攻撃対象の有効エネミーカウントがいっぱいだった場合に、他の敵を攻撃対象にする
                             ShiftSlots();
 
                         }
-                    //戦闘中
+                        //戦闘中
                         else
                         {
                             //戦闘中にまだ距離が離れている場合は再度近づく
@@ -128,7 +128,7 @@ public class EnemyController : AbstractController
                             Guard();
                         }
                     }
-                    
+
                     break;
             }
         }
@@ -210,7 +210,7 @@ public class EnemyController : AbstractController
 
                 case Species.Monsieur:
 
-                    if(this.plan is null)
+                    if (this.plan is null)
                     {
                         this.plan = EvaluatePlans(this.planList);
                     }
@@ -253,7 +253,7 @@ public class EnemyController : AbstractController
                         case Goal.Eat:
 
                             //食事場にいない場合は、一旦そこまで移動する
-                            if(OverDistance(plan.goalObject.position, ICreature.stoppingDistance))
+                            if (OverDistance(plan.goalObject.position, ICreature.stoppingDistance))
                             {
                                 SetNavigationCorners(plan.goalObject.position);
                                 creatureState = State.Move;
@@ -455,10 +455,10 @@ public class EnemyController : AbstractController
         float maxValue = 0.7f;
         Plan bestPlan = new(Goal.Walk);
 
-        foreach(Plan plan in plans)
+        foreach (Plan plan in plans)
         {
             var value = (1 - plan.desire / plan.maxDesire);
-            if(value > maxValue)
+            if (value > maxValue)
             {
                 maxValue = value;
                 bestPlan = plan;

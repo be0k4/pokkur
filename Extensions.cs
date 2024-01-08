@@ -99,11 +99,11 @@ public static class Extensions
     }
 
     //イベントフラグ関連
-    public static Dictionary<FunctionalFlag, bool?> flagDic = new() 
+    public static Dictionary<FunctionalFlag, bool?> flagDic = new()
     {
-        { FunctionalFlag.None, null},
-        { FunctionalFlag.Recruitable, null},
-        { FunctionalFlag.Management, null}
+        { FunctionalFlag.None, null },
+        { FunctionalFlag.Recruitable, null },
+        { FunctionalFlag.Management, null }
     };
 
     public static bool? GetFlag(this FunctionalFlag sorce)
@@ -120,11 +120,11 @@ public static class Extensions
     {
         //経験値ボーナス系
         //スキル名、説明文、影響を与える数値
-        { Skill.Machomen, ("I love muscle training. Bonus to power exp.", 1.1f)},
+        { Skill.Machomen, ("I love muscle training. Bonus to power exp.", 1.1f) },
         { Skill.Master, ("I'm skilled. Bonus to dex exp.", 1.1f) },
-        { Skill.Toughguy, ("It's itchy! Bonus to Toughness exp.", 1.1f)},
-        { Skill.Speedster, ("Still not fast enough.. Bonus to attackSpeed exp.", 1.1f)},
-        { Skill.Pacifist, ("No more violence! Bonus to defence exp.", 1.1f)},
+        { Skill.Toughguy, ("It's itchy! Bonus to Toughness exp.", 1.1f) },
+        { Skill.Speedster, ("Still not fast enough.. Bonus to attackSpeed exp.", 1.1f) },
+        { Skill.Pacifist, ("No more violence! Bonus to defence exp.", 1.1f) },
 
     };
 

@@ -4,7 +4,7 @@ using UnityEngine;
 /// スクリプタブルオブジェクト
 /// <para>アイテムに共通するデータを含む</para>
 /// </summary>
-[CreateAssetMenu(menuName ="ItemData")]
+[CreateAssetMenu(menuName = "ItemData")]
 public class ItemData : ScriptableObject
 {
     public float data;

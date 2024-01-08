@@ -41,7 +41,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
         {
             this.gameObject.InitializePokkur();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.Log($"例外{e.StackTrace}");
             return;
@@ -87,7 +87,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
             //関数フラグを初期化
             functionalFlag.SetFlag(null);
         }
-        
+
     }
 
     [ContextMenu("Generate guid for id")]

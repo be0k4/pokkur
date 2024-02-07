@@ -99,6 +99,7 @@ public static class Extensions
     }
 
     //イベントフラグ関連
+    //イベントの選択肢を選んだあと、実際にイベントが発生するかしないかまで区別する
     public static Dictionary<FunctionalFlag, bool?> flagDic = new()
     {
         { FunctionalFlag.None, null },

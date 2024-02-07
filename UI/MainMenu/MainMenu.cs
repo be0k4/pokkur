@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class MainMenu : MonoBehaviour
 {
+    public const string mainmenu = "MainMenu";
+
     [SerializeField] SaveSlotsMenu saveSlotsMenu;
     [SerializeField] ConfigMenu configMenu;
 

@@ -16,15 +16,15 @@ public class EquipmentFrame : MonoBehaviour, IDropHandler
     /// <summary>
     /// インベントリを開いた際と違う武器が設定してある場合true
     /// </summary>
-    public bool Changed { get => changed;}
+    public bool Changed { get => changed; }
     /// <summary>
     /// パーティ内のインデックスと一致させるための番号
     /// </summary>
-    public int Index { get => index;}
+    public int Index { get => index; }
     /// <summary>
     /// 変更があった場合に登録される武器
     /// </summary>
-    public ICollectable Item { get => item;}
+    public ICollectable Item { get => item; }
 
     private void Start()
     {
@@ -35,8 +35,8 @@ public class EquipmentFrame : MonoBehaviour, IDropHandler
     {
         Draggable dropping = data.pointerDrag.GetComponent<Draggable>();
 
-        //ドロップするアイテムが武器でない、または武器が置いてない(武器がない場合はItemはnull。ユニークウェポンの場合はprefabがnull。)
-        if (dropping.Item is not Weapon || GetComponentInChildren<Draggable>().Item?.GetItemData().prefab == null) return;
+        //ドロップするアイテムが武器でない、または武器が置いてない、またはユニーク武器が置いてある場合はドロップ不可
+        if (dropping.Item is not Weapon || GetComponentInChildren<Draggable>().Item == null || GetComponentInChildren<Draggable>().Item.GetItemData().address == ICreature.uniqueWeapon) return;
 
         //親を入れ替える
         var child = GetComponentInChildren<Draggable>();

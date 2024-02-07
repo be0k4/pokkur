@@ -124,7 +124,7 @@ public class PrefabInitializer : EditorWindow
             {
                 DestroyImmediate(weapon.transform.GetChild(0).gameObject);
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 Debug.LogError("prefabの一部なのでコライダを削除できませんでした。手動でコライダを削除してください。");
             }

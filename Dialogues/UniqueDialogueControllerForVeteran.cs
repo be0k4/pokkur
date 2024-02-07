@@ -6,24 +6,26 @@ using UnityEngine.AddressableAssets;
 
 /// <summary>
 /// <para>ベテランポックル専用</para>
-/// スタンバイを保持し、パーティ管理を行う。
+/// スタンバイを保持し、パーティ管理を行う
 /// </summary>
 public class UniqueDialogueControllerForVeteran : DialogueController
 {
-    [SerializeField, Tooltip("会話テキスト")] TextAsset[] textFiles;
+    [SerializeField, Tooltip("専用会話テキスト")] TextAsset[] textFiles;
 
     [Header("スタンバイ関連")]
-    [SerializeField] List<GameObject> standby;
+    List<GameObject> standby = new();
     [SerializeField, Tooltip("スタンバイを配置するための空オブジェクト")] List<Transform> standbyPositionList;
 
     private async UniTask Update()
     {
+        if (GameManager.invalid) return;
+
         localUI.transform.rotation = Camera.main.transform.rotation;
 
         //会話開始
         if (interactable && Input.GetKeyDown(KeyCode.T))
         {
-            if (!gameManager.CheckPartyIsReady(this.gameObject.transform))
+            if (gameManager.CheckPartyIsReady(this.gameObject.transform) is false)
             {
                 hintText.text = "GATHER PARTY!";
                 hintText.color = Color.yellow;

@@ -14,7 +14,7 @@ public class Weapon : MonoBehaviour, ICollectable
     {
         return itemData;
     }
-    public void Instatiate()
+    public void Instantiate()
     {
         Instantiate(itemData.prefab, GameManager.activeObject.transform.forward + GameManager.activeObject.transform.position, Quaternion.Euler(-90, 0, 0));
     }
@@ -55,6 +55,9 @@ public class Weapon : MonoBehaviour, ICollectable
                 break;
             case AbstractItem:
                 result = 1;
+                break;
+            case Orb:
+                result = -1;
                 break;
             default:
                 Debug.LogWarning($"不明な型　{other.GetType()}　が比較されています。");

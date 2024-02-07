@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] AudioSource uiAudioManager;
     [SerializeField] AudioClip dialogueSe;
     [SerializeField] AudioClip recruitSe;
-    [SerializeField, Tooltip("朝もしくは洞窟内のBGM")] AudioClip dayMusic;
+    [SerializeField, Tooltip("洞窟内はdaymusicのみ")] AudioClip dayMusic;
     [SerializeField] AudioClip nightMusic;
 
     [SerializeField] Weather weatherState;
@@ -112,6 +112,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
     Vector3 lightEulerAngle = Vector3.zero;
     //天候の廃棄を譲渡されるデリゲート
     event Action weatherChangedTrigger;
+    //バッドエンディングを再生するデリゲート
+    public event Action badEndTrigger;
+    public const int gameOver = 14;
 
     //3：地面 6：キャラクター 7:エネミー 14:アイテム
     int layerMask = 1 << 3 | 1 << 6 | 1 << 7 | 1 << 14;
@@ -121,7 +124,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     async UniTask Start()
     {
         //ロード中に暗転アニメーションを流す
-        blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
+        BlackOut();
         //天候の初期化とBGmの再生
         switch (weatherState)
         {
@@ -177,6 +180,19 @@ public class GameManager : MonoBehaviour, IDataPersistence
         if (Input.GetKeyDown(KeyCode.Tab)) Inventory();
 
         if (Input.GetKeyDown(KeyCode.Escape)) inGameMenu.ActivateMainMenu();
+    }
+
+    public void PlayOneShot(AudioClip clip)
+    {
+        uiAudioManager.PlayOneShot(clip);
+    }
+
+    /// <summary>
+    /// 演出用の暗転アニメーション
+    /// </summary>
+    public void BlackOut()
+    {
+        blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
     }
 
     /// <summary>
@@ -286,8 +302,15 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //360度以上で一日が終わる
         else
         {
+            //バッドエンド
+            if (++inGamedays > gameOver)
+            {
+                badEndTrigger?.Invoke();
+                return;
+            }
+
             //日付の更新
-            dayText.text = $"day\n{++inGamedays}";
+            dayText.text = $"day\n{inGamedays}/{GameManager.gameOver}";
             inGameHours = 0;
             //オートセーブ
             DataPersistenceManager.instance.SaveGame();
@@ -644,12 +667,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// ダイアログを流す。選択によって分岐を行う事も可能。
     /// </summary>
     /// <param name="textFile">会話テキスト</param>
-    /// <param name="token"></param>
     /// <returns>分岐を含む会話後に発生するイベントの列挙型フラグ。これはテキストファイルで指定する。</returns>
     public async UniTask<FunctionalFlag> Dialogue(TextAsset textFile, CancellationToken token)
     {
         FunctionalFlag functionalFlag = default;
-        if (dialogueWindow.gameObject.activeSelf) return functionalFlag;
         //一時停止
         Time.timeScale = 0;
         dialogueWindow.gameObject.SetActive(true);
@@ -667,7 +688,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 //<branch>を取り除き、/で区切る「ブランチA文章/ブランチB文章/フラグ名」
                 var branchInfo = dialogueTexts[i].Replace("<branch>", "").Split('/');
 
-                //会話後起動する関数フラグの一覧から、名前の一致するものを取得(大文字小文字は区別しない)
+                //関数フラグの一覧から、名前の一致するものを取得(大文字小文字は区別しない)
                 var functionalFlags = (FunctionalFlag[])Enum.GetValues(typeof(FunctionalFlag));
                 functionalFlag = functionalFlags.First(e => Enum.GetName(typeof(FunctionalFlag), e).Equals(branchInfo[^1], StringComparison.OrdinalIgnoreCase));
                 //会話を中断し選択肢(Button)を表示
@@ -682,7 +703,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 branches[0].onClick.AddListener(() => functionalFlag.SetFlag(true));
                 branches[1].onClick.AddListener(() => functionalFlag.SetFlag(false));
                 //選択肢が押されるまで待機(ボタンが押されるまでフラグはnull)
-                await UniTask.WaitWhile(() => functionalFlag.GetFlag().HasValue is false, PlayerLoopTiming.Update, token);
+                await UniTask.WhenAny(branches[0].OnClickAsync(), branches[1].OnClickAsync());
                 //フラグの内容次第で分岐以外を削除
                 dialogueTexts.RemoveAll(e => e.StartsWith($"<{!functionalFlag.GetFlag()}>", StringComparison.OrdinalIgnoreCase));
                 //選択肢を非表示
@@ -743,7 +764,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         party.Add(pokkur);
 
         //暗転
-        blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
+        BlackOut();
         await UniTask.Delay(500, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, token);
         invalid = false;
         uiAudioManager.PlayOneShot(recruitSe);
@@ -754,8 +775,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// シーン遷移や会話の際に、パーティの状態とオブジェクトとの距離をチェックする
+    /// シーン遷移や会話の際に、パーティの状態と引数のターゲットとの距離をチェックする。
     /// </summary>
+    /// <param name="target">パーティと距離を測る対象</param>
     /// <returns>準備完了ならtrue</returns>
     public bool CheckPartyIsReady(Transform target)
     {
@@ -849,7 +871,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             removeArea.GetComponent<RemoveArea>().Remove(true);
         }
         //暗転
-        blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
+        BlackOut();
         await UniTask.Delay(1000, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, token);
         //UI上のパーティと待機所を反映
         var newParty = managementWindow.Find("Party").GetComponentsInChildren<ManagementIcon>().Select(e => e.Pokkur).ToList();
@@ -910,7 +932,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //ダンジョン外ならデータからとってくる
         this.weatherState = isInDungeon ? Weather.Dungeon : data.weatherState;
 
-        //インベントリはアイテムクラスからアクセスするコストを考えて静的にしたので、中身をここでリセットする
+        //インベントリはアイテムクラスからアクセスするコストを考えてstaticにしたので、中身をここでリセットする
         inventory.Clear();
         foreach (var address in data.inventory)
         {
@@ -945,7 +967,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
             var pokkur = Instantiate(prefab, startPositions?[i] ?? data.party[i].position, Quaternion.identity);
 
             Addressables.Release(handle);
-            if (string.IsNullOrEmpty(data.party[i].weaponAddress) is false)
+
+            //ユニークウェポンは直接ポックルのprefabに含まれるのでスキップされる
+            if (data.party[i].weaponAddress is not ICreature.uniqueWeapon)
             {
                 var weaponHandle = Addressables.LoadAssetAsync<GameObject>(data.party[i].weaponAddress);
                 var weaponPrefab = await weaponHandle.Task;
@@ -1019,9 +1043,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
             weaponSlotPath = weaponSlotPath.Remove(0, index);
 
             //ダンジョン内と外で保存する地点が異なる
-            //内：入口で保存した地点
+            //内：入口でいた地点
             //外：現在地
-            //ダンジョン内で仲間になった場合、保存された地点が、無いのでその場合は一つ前の仲間と同じ地点で保存する
+            //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
             var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,

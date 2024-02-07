@@ -145,168 +145,82 @@ public class EnemyController : AbstractController
             return destination;
         }
 
-        //待機状態では、種族ごとのプランに基づき各々の処理を行う
+        //待機状態では、種族ごとにプランに基づき各々の処理を行う
         void DoEachPlans()
         {
-            switch (this.creatureStatus.Species)
+            if (this.plan is null)
             {
-                case Species.BetaSaurus:
+                this.plan = EvaluatePlans(this.planList);
+            }
 
-                    //プランの設定
-                    if (this.plan is null)
+            switch (this.plan.goal)
+            {
+                case Goal.Walk:
+
+                    foreach (Plan plan in this.planList)
                     {
-                        this.plan = EvaluatePlans(this.planList);
+                        plan.ReduceDesire();
                     }
 
-                    switch (this.plan.goal)
+                    //移動
+                    //クールダウンが0になったら経路探索を行う
+                    moveCooldown -= Time.deltaTime;
+
+                    if (moveCooldown < 0)
                     {
-                        case Goal.Walk:
-
-                            foreach (Plan plan in this.planList)
-                            {
-                                plan.ReduceDesire();
-                            }
-
-                            //移動
-                            //クールダウンが0になったら経路探索を行う
-                            moveCooldown -= Time.deltaTime;
-
-                            if (moveCooldown < 0)
-                            {
-                                CreatureState = State.Move;
-                                moveCooldown = Random.Range(randomRangeMin, randomRangeMax);
-                                SetNavigationCorners(GetRandomPoint());
-                            }
-                            else if (moveCooldown > 5.0f)
-                            {
-                                if (animator.GetCurrentAnimatorStateInfo(0).IsName("Bark") is false) animator.SetTrigger(ICreature.barkTrigger);
-                            }
-                            break;
-
-                        case Goal.Sleep:
-
-                            this.plan.desire += Time.deltaTime;
-                            animator.SetBool(ICreature.sleepFlag, true);
-
-                            if (this.plan.desire > this.plan.maxDesire)
-                            {
-                                //プランの初期化
-                                animator.SetBool(ICreature.sleepFlag, false);
-                                plan.desire = plan.maxDesire;
-                                this.plan = null;
-                                //索敵範囲を戻す
-                                GetComponentInChildren<SphereCollider>().radius = 3;
-                            }
-                            break;
-
-                        case Goal.Battle:
-                            //プランごとの変化した値を初期化してから戦闘へ
-                            GetComponentInChildren<SphereCollider>().radius = 3;
-                            animator.SetBool(ICreature.sleepFlag, false);
-                            creatureState = State.Battle;
-                            break;
+                        CreatureState = State.Move;
+                        moveCooldown = Random.Range(randomRangeMin, randomRangeMax);
+                        SetNavigationCorners(GetRandomPoint());
                     }
                     break;
 
-                case Species.Monsieur:
-
-                    if (this.plan is null)
+                case Goal.Battle:
+                    GetComponentInChildren<SphereCollider>().radius = 3;
+                    //プランごとの変化した値を初期化してから戦闘へ
+                    foreach (var parameter in animator.parameters.Where(e => e.type == AnimatorControllerParameterType.Bool))
                     {
-                        this.plan = EvaluatePlans(this.planList);
+                        animator.SetBool(parameter.name, false);
                     }
+                    creatureState = State.Battle;
+                    break;
 
-                    switch (this.plan.goal)
+                case Goal.Sleep:
+
+                    this.plan.desire += Time.deltaTime;
+                    animator.SetBool(ICreature.sleepFlag, true);
+
+                    if (this.plan.desire > this.plan.maxDesire)
                     {
-                        case Goal.Walk:
-
-                            foreach (Plan plan in this.planList)
-                            {
-                                plan.ReduceDesire();
-                            }
-
-                            //移動
-                            //クールダウンが0になったら経路探索を行う
-                            moveCooldown -= Time.deltaTime;
-
-                            if (moveCooldown < 0)
-                            {
-                                CreatureState = State.Move;
-                                moveCooldown = Random.Range(randomRangeMin, randomRangeMax);
-                                SetNavigationCorners(GetRandomPoint());
-                            }
-                            break;
-
-                        case Goal.Sleep:
-
-                            this.plan.desire += Time.deltaTime;
-
-                            if (this.plan.desire > this.plan.maxDesire)
-                            {
-                                //プランの初期化
-                                plan.desire = plan.maxDesire;
-                                this.plan = null;
-                                //索敵範囲を戻す
-                                GetComponentInChildren<SphereCollider>().radius = 3;
-                            }
-                            break;
-
-                        case Goal.Eat:
-
-                            //食事場にいない場合は、一旦そこまで移動する
-                            if (OverDistance(plan.goalObject.position, ICreature.stoppingDistance))
-                            {
-                                SetNavigationCorners(plan.goalObject.position);
-                                creatureState = State.Move;
-                            }
-                            //食事場に近い場合は食事をする
-                            else
-                            {
-                                this.plan.desire += Time.deltaTime;
-                                animator.SetBool(ICreature.eatFlag, true);
-                            }
-
-                            if (this.plan.desire > this.plan.maxDesire)
-                            {
-                                //プランの初期化
-                                plan.desire = plan.maxDesire;
-                                this.plan = null;
-                                animator.SetBool(ICreature.eatFlag, false);
-                            }
-                            break;
-
-                        case Goal.Battle:
-                            GetComponentInChildren<SphereCollider>().radius = 3;
-                            animator.SetBool(ICreature.eatFlag, false);
-                            animator.SetBool(ICreature.sleepFlag, false);
-                            creatureState = State.Battle;
-                            break;
+                        //プランの初期化
+                        animator.SetBool(ICreature.sleepFlag, false);
+                        plan.desire = plan.maxDesire;
+                        this.plan = null;
+                        //索敵範囲を戻す
+                        GetComponentInChildren<SphereCollider>().radius = 3;
                     }
                     break;
-                //特にプランを持たない種類
-                default:
 
-                    if (this.plan is null)
+                case Goal.Eat:
+
+                    //食事場にいない場合は、一旦そこまで移動する
+                    if (OverDistance(plan.goalObject.position, ICreature.stoppingDistance))
                     {
-                        this.plan = EvaluatePlans(this.planList);
+                        SetNavigationCorners(plan.goalObject.position);
+                        creatureState = State.Move;
+                    }
+                    //食事場に近い場合は食事をする
+                    else
+                    {
+                        this.plan.desire += Time.deltaTime;
+                        animator.SetBool(ICreature.eatFlag, true);
                     }
 
-                    switch (this.plan.goal)
+                    if (this.plan.desire > this.plan.maxDesire)
                     {
-                        case Goal.Walk:
-                            moveCooldown -= Time.deltaTime;
-
-                            if (moveCooldown < 0)
-                            {
-                                CreatureState = State.Move;
-                                moveCooldown = Random.Range(randomRangeMin, randomRangeMax);
-                                SetNavigationCorners(GetRandomPoint());
-                            }
-                            break;
-
-                        case Goal.Battle:
-                            Debug.Log("戦闘開始");
-                            creatureState = State.Battle;
-                            break;
+                        //プランの初期化
+                        plan.desire = plan.maxDesire;
+                        this.plan = null;
+                        animator.SetBool(ICreature.eatFlag, false);
                     }
                     break;
             }
@@ -480,11 +394,14 @@ public enum Goal
     Battle
 }
 
+/// <summary>
+/// Idleステートにおいて、敵がとる行動の情報をオブジェクト化したもの
+/// </summary>
 [System.Serializable]
 public class Plan
 {
     public Goal goal;
-    public Transform goalObject;
+    [Tooltip("目的地が必要なプラン以外はnullでOK")]public Transform goalObject;
     public float desire;
     public float maxDesire;
 

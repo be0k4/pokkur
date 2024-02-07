@@ -30,7 +30,7 @@ public class DungeonGate : AbstractInteractable
 
         if(interactable && Input.GetKeyDown(KeyCode.T))
         {
-            if (!gameManager.CheckPartyIsReady(this.gameObject.transform))
+            if (gameManager.CheckPartyIsReady(this.gameObject.transform) is false)
             {
                 hintText.text = "GATHER PARTY!";
                 hintText.color = Color.yellow;
@@ -47,7 +47,7 @@ public class DungeonGate : AbstractInteractable
     }
 
     /// <summary>
-    /// セーブを行い、シーンを読みこむ。
+    /// セーブを行い、シーン内外のフラグを切り替えて、シーンを読みこむ。
     /// </summary>
     /// <param name="inOutDungeon">ダンジョンの入口もしくは出口の場合true</param>
     void IntoGate(bool inOutDungeon)
@@ -99,7 +99,6 @@ public override void OnInspectorGUI()
         EditorGUILayout.PropertyField(serializedObject.FindProperty("inOutDungeon"));
         index = EditorGUILayout.Popup("シーン名を選択", index, options);
         serializedObject.FindProperty("sceneName").stringValue = options[index];
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("sceneName"));
         serializedObject.ApplyModifiedProperties();
     }
 }

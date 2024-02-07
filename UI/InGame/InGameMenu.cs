@@ -5,7 +5,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
+using UnityEngine.SceneManagement;
 /// <summary>
 /// インゲームのメニュー画面
 /// <para>タイトル画面のメニュー機能を一部集約したもの</para>
@@ -52,6 +52,21 @@ public class InGameMenu : MonoBehaviour
         InitializeConfig();
     }
 
+    /// <summary>
+    /// 確認ウィンドウを表示
+    /// </summary>
+    /// <returns>0か1を返す</returns>
+    async UniTask<int> ConfirmWindow()
+    {
+        //確認ウィンドウ表示、選択を待機
+        confirmWindow.gameObject.SetActive(true);
+        //選択に応じて、上書きもしくは無かったことにする
+        var buttons = confirmWindow.GetComponentsInChildren<Button>();
+        var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
+        confirmWindow.gameObject.SetActive(false);
+        return value;
+    }
+
     //メインメニュー関連//
     public void OnSaveClicked()
     {
@@ -84,6 +99,15 @@ public class InGameMenu : MonoBehaviour
         mainMenu.gameObject.SetActive(false);
     }
 
+    public async void OnTitleClicked()
+    {
+        var value = await ConfirmWindow();
+        if (value is 1) return;
+        //操作可能にする
+        GameManager.invalid = false;
+        Time.timeScale = 1;
+        await SceneManager.LoadSceneAsync(MainMenu.mainmenu);
+    }
 
     //セーブスロットメニュー関連//
     public void OnBackClickedInSaveSlotsMenu()
@@ -99,13 +123,7 @@ public class InGameMenu : MonoBehaviour
         {
             //誤クリック防止
             ReverseButtons(false);
-            //確認ウィンドウ表示、選択を待機
-            confirmWindow.gameObject.SetActive(true);
-            //選択に応じて、上書きもしくは無かったことにする
-            var buttons = confirmWindow.GetComponentsInChildren<Button>();
-            var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
-            confirmWindow.gameObject.SetActive(false);
-
+            var value = await ConfirmWindow();
             //0は上書き、1はキャンセル
             if (value is 1)
             {
@@ -213,17 +231,16 @@ public class InGameMenu : MonoBehaviour
         dataHandler.Save(configData, "option");
     }
 
-    public void ActivateOptionMenu()
+    void ActivateOptionMenu()
     {
         this.optionMenu.gameObject.SetActive(true);
     }
 
-    public void DeactiveOptionMenu()
+    void DeactiveOptionMenu()
     {
         this.optionMenu.gameObject.SetActive(false);
     }
 
-    //UI登録用
     public void SetUIVolume()
     {
         uiAudio.volume = seVolumeSlider.value;

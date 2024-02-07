@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: claw
   m_EditorClassIdentifier: 
   data: 30
-  icon: {fileID: 21300000, guid: f635f459c36582940b1321ed691e07af, type: 3}
+  icon: {fileID: 21300000, guid: f9556fe6095beb546875f14ad5005291, type: 3}
   prefab: {fileID: 0}
   itemText: 'Claws
 
     Damage 30
 
     Wolf''s sharp claws.'
+  address: unique

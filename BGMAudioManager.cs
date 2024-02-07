@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// BGMの管理を行う
@@ -11,11 +12,12 @@ public class BGMAudioManager : MonoBehaviour
     /// </summary>
     public static BGMAudioManager instance;
 
+    [SerializeField, Tooltip("メインメニュー内BGM")] AudioClip mainMenuClip;
     [SerializeField] AudioSource track0, track1;
     [SerializeField, Tooltip("BGMがフェードイン、アウトする時間")] float duration;
 
     //音量調節結果を保持するための変数
-    [SerializeField] float volume;
+    float volume;
 
     void Awake()
     {
@@ -28,6 +30,20 @@ public class BGMAudioManager : MonoBehaviour
         DontDestroyOnLoad(this.gameObject);
     }
 
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += SwapTrackInMainMenu;
+    }
+
+    /// <summary>
+    /// メインメニューをロードした時にBGMを変える
+    /// </summary>
+    async void SwapTrackInMainMenu(Scene scene, LoadSceneMode mode)
+    {
+        if (SceneManager.GetActiveScene().name != MainMenu.mainmenu) return;
+        await SwapTrack(mainMenuClip);
+    }
+
     /// <summary>
     /// 引数の音源にBGMを入れ替える
     /// </summary>
@@ -35,7 +51,7 @@ public class BGMAudioManager : MonoBehaviour
     {
         if (track0.isPlaying)
         {
-            //ダンジョン内では同じBGMがかかるのでここで終了
+            //再生中のクリップと同じクリップを再生仕様とした場合は何もしない
             if (track0.clip == newClip) return;
 
             track1.clip = newClip;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: woodSpear
   m_EditorClassIdentifier: 
   data: 5
-  icon: {fileID: 21300000, guid: 0aacf48f9e7e77649828ed4acac7727d, type: 3}
+  icon: {fileID: 21300000, guid: 9fadab219f108ec498b7fea4ffe06781, type: 3}
   prefab: {fileID: 4211049706788997695, guid: 9b716aeed18269c48ab0f41160cd7eef, type: 3}
   itemText: 'Wood Spear
 

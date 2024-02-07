@@ -10,14 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
-  m_Name: herb
+  m_Name: GoldenOrb
   m_EditorClassIdentifier: 
-  data: 20
-  icon: {fileID: 21300000, guid: d8263d47e3a886e44b6f9eb12539ede0, type: 3}
-  prefab: {fileID: 39575455936016839, guid: 7ccfffe4a2731dd4fa357c9f084087eb, type: 3}
-  itemText: 'Green Herb
-
-    Heal 20
-
-    Medical herb.'
-  address: herb.prefab
+  data: 0
+  icon: {fileID: 21300000, guid: dc125d49f28111a4ea6481560e654eb6, type: 3}
+  prefab: {fileID: 0}
+  itemText: "A shining golden orb. \nLet's take it to the elder."
+  address: GoldenOrb.prefab

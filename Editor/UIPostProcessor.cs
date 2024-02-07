@@ -18,6 +18,7 @@ public class UIPostProcessor : AssetPostprocessor
             TextureImporter importer = this.assetImporter as TextureImporter;
             //初回インポート時のみが対象
             if (importer.importSettingsMissing is false) return;
+            importer.spritePixelsPerUnit = 1;
             importer.textureType = TextureImporterType.Sprite;
             importer.alphaIsTransparency = true;
             importer.filterMode = FilterMode.Trilinear;

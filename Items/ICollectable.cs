@@ -12,7 +12,7 @@ public interface ICollectable : IDataPersistence, IComparable<ICollectable>
     //当たり判定で、プレイヤー側からこのメソッドを呼び出す
     void Collect();
     //インベントリから外に出した時の処理
-    void Instatiate();
+    void Instantiate();
     //リポップ制御で管理するIDを生成する
     //継承先のクラスで実装時に[ContextMenu]をつけて、インスペクタからIDを生成できるようにする
     void GenerateGuid();

@@ -18,7 +18,9 @@ public class SaveData : ISavable
     public float inGameHours;
     public Weather weatherState;
 
-    //コンストラクターに定義された値が初期値となる
+    /// <summary>
+    /// このコンストラクターに定義された値が初期値となる
+    /// </summary>
     public SaveData()
     {
         //最初のシーン名を指定
@@ -27,7 +29,14 @@ public class SaveData : ISavable
         party = new();
         standby = new();
         inventory = new();
-        repopChecker = new();
+        //長老が持っているオーブは最初非表示なので、集めたことにしておく。拾って来た時にfalseになり、表示されるようになる。
+        repopChecker = new()
+        {
+            { "collectedGold", true },
+            { "collectedSilver", true },
+            { "collectedRed", true },
+            { "collectedBlue", true }
+        };
         inGamedays = 0;
         inGameHours = 0;
         weatherState = Weather.Day;
@@ -37,6 +46,11 @@ public class SaveData : ISavable
     public string GetTimeStamp()
     {
         return DateTime.FromBinary(this.lastUpdated).ToString("g");
+    }
+
+    public string GetLeftDays()
+    {
+        return $"Day {inGamedays}/{GameManager.gameOver}";
     }
 
 }

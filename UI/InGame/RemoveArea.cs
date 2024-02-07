@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// アイテムを捨てる・ポックルと別れるエリア
+/// アイテムを捨てる・ポックルと別れる
 /// </summary>
 public class RemoveArea : MonoBehaviour, IDropHandler
 {
@@ -22,7 +22,7 @@ public class RemoveArea : MonoBehaviour, IDropHandler
     {
         GameObject dropping = data.pointerDrag;
         var draggable = dropping.GetComponent<Draggable>();
-        //pokkur
+        //ポックル
         if (draggable is null)
         {
             //パーティのポックルが一人もいない場合は削除できない
@@ -34,14 +34,17 @@ public class RemoveArea : MonoBehaviour, IDropHandler
             candidateList.Add(managementIcon.Pokkur);
             managementIcon.Pokkur = null;
         }
-        //item
+        //アイテム
         else
         {
+            //オーブは捨てられないアイテム
+            if (draggable.Item is Orb) return;
+
             // アイコンを非表示、アイテムを生成、アイテムデータを消す
             Image icon = dropping.GetComponent<Image>();
             icon.sprite = null;
             icon.color = new Color32(255, 255, 255, 0);
-            draggable.Item.Instatiate();
+            draggable.Item.Instantiate();
             draggable.Item = null;
         }
     }

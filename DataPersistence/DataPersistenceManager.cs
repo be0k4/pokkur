@@ -129,6 +129,9 @@ public class DataPersistenceManager : MonoBehaviour
     /// </summary>
     public void LoadGame()
     {
+        //ロード開始
+
+
         //セーブデータをjsonファイルからオブジェクトに変換
         this.gameData = dataHandler.Load<SaveData>(selectedProfileId);
 
@@ -165,10 +168,10 @@ public class DataPersistenceManager : MonoBehaviour
             dataPersistenceObject?.SaveData(this.gameData);
         }
 
-        //DateTime構造体をシリアル化するため2進数に変換
+        //DateTime構造体をシリアル化
         this.gameData.lastUpdated = DateTime.Now.ToBinary();
         //メインメニュー以外でシーン名を保存
-        if (SceneManager.GetActiveScene().name != "MainMenu") this.gameData.sceneName = SceneManager.GetActiveScene().name;
+        if (SceneManager.GetActiveScene().name != MainMenu.mainmenu) this.gameData.sceneName = SceneManager.GetActiveScene().name;
 
         //セーブデータを保存
         dataHandler.Save(this.gameData, selectedProfileId);

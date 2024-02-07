@@ -12,7 +12,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
     [SerializeField] protected TextAsset textFile;
     protected CancellationToken token;
 
-    [SerializeField, Tooltip("リポップ管理に使うID。GenerateGuidで生成")] string id;
+    [SerializeField, Tooltip("リポップ管理に使うID。GenerateGuid()で生成")] string id;
     //リポップ管理に使う
     bool isRecruited;
 
@@ -51,6 +51,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
     //会話イベントを制御
     private async UniTask Update()
     {
+        //二重に会話するのを防ぐ
         if (GameManager.invalid) return;
 
         localUI.transform.rotation = Camera.main.transform.rotation;
@@ -76,7 +77,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
                     }
                     else
                     {
-                        //パーティ加入イベントが発生した場合はリポップしない
+                        //パーティ加入イベントが発生した場合はリポップしなくなる
                         isRecruited = true;
                     }
                     break;
@@ -114,5 +115,5 @@ public enum FunctionalFlag
 {
     None,//何もしない
     Recruitable,//パーティへ勧誘
-    Management//パーティ管理
+    Management,//パーティ管理
 }

@@ -13,7 +13,7 @@ public class SaveSlot : MonoBehaviour
     [SerializeField] GameObject noDataContent;
     [SerializeField] GameObject hasDataContent;
     [SerializeField] TextMeshProUGUI dateTimeText;
-    [SerializeField] TextMeshProUGUI achievementText;
+    [SerializeField] TextMeshProUGUI leftDaysText;
 
     [Header("ボタン")]
     [SerializeField] Button clearButton;
@@ -27,7 +27,6 @@ public class SaveSlot : MonoBehaviour
     /// <summary>
     /// 表示の変更、セーブするデータの保持を行う
     /// </summary>
-    /// <param name="data"></param>
     public void SetData(SaveData data)
     {
         //表示の切り替え
@@ -45,9 +44,10 @@ public class SaveSlot : MonoBehaviour
             hasDataContent.SetActive(true);
             clearButton?.gameObject.SetActive(true);
             hasData = true;
-            //TODO:SaveDataオブジェクトにゲーム進行度に関するデータを保持させ、それを取得するメソッドを実装
-            //日付は実装済み。あとはゲーム内の日にち。
+
+            //日付
             dateTimeText.text = data.GetTimeStamp();
+            leftDaysText.text = data.GetLeftDays();
         }
     }
 

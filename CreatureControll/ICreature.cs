@@ -23,6 +23,8 @@ public interface ICreature
     const int partyLimit = 4;
     //キャラクターが死んだかUIで監視するフラグ
     static bool isDead = false;
+    //ユニーク武器の識別
+    const string uniqueWeapon = "unique";
 
     //タグ
     const string player = "Player";

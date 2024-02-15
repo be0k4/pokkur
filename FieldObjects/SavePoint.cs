@@ -51,7 +51,7 @@ public class SavePoint : AbstractInteractable
             var status = pokkur.GetComponentInChildren<CreatureStatus>();
             var heal = 100 - status.HealthPoint;
             status.HealthPoint = 100;
-            pokkur.GetComponentInChildren<BattleManager>().UpdateBattleUI(heal, false, BattleManager.HealDamageText);
+            pokkur.GetComponentInChildren<BattleManager>().UpdateBattleUI(heal, BattleManager.HealDamage);
         }
 
         //メインメニューを表示

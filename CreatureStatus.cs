@@ -18,6 +18,8 @@ public class CreatureStatus : MonoBehaviour
     [SerializeField, Tooltip("忍耐"), Range(1, 100)] float toughness;
     [SerializeField, Tooltip("攻撃速度"), Range(1, 100)] float attackSpeed;
     [SerializeField, Tooltip("防御"), Range(1, 100)] float guard;
+    [Header("隠しステータス")]
+    [SerializeField, Tooltip("怯み値(大体HPの1/10から1/4くらいで調整)")] float staggerThreshold;
     [SerializeField, Tooltip("斬撃耐性")] Resistance slashResist;
     [SerializeField, Tooltip("刺突耐性")] Resistance stabResist;
     [SerializeField, Tooltip("打撃耐性")] Resistance strikeResist;
@@ -60,9 +62,9 @@ public class CreatureStatus : MonoBehaviour
     //アニメーション管理用フラグ
     private bool isGuarding;
     private bool isAttaking;
-    private bool isAttacked;
+    private bool hitactionFlag;
 
-    //プロパティ
+    //ゲッターセッター
     public Species Species { get => species; }
     public float HealthPoint { get => Mathf.RoundToInt(healthPoint); set => healthPoint = value; }
     public float MovementSpeed { get => Mathf.RoundToInt(movementSpeed); set => movementSpeed = value; }
@@ -80,12 +82,13 @@ public class CreatureStatus : MonoBehaviour
     ///<para>アニメーション管理用フラグ</para>
     ///武器からの被ダメージ計算するときにtrue、被弾アニメーション終了時falseにする。
     /// </summary>
-    public bool IsAttacked { get => isAttacked; set => isAttacked = value; }
+    public bool HitactionFlag { get => hitactionFlag; set => hitactionFlag = value; }
     /// <summary>
     ///<para>アニメーション管理用フラグ</para>
     ///攻撃アニメーション再生時true、攻撃用コライダ無効・被弾アニメーション時falseにする。
     /// </summary>
     public bool IsAttaking { get => isAttaking; set => isAttaking = value; }
+    public float StaggerThreshold { get => staggerThreshold;}
     public Resistance SlashResist { get => slashResist; set => slashResist = value; }
     public Resistance StabResist { get => stabResist; set => stabResist = value; }
     public Resistance StrikeResist { get => strikeResist; set => strikeResist = value; }

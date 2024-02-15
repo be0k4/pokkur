@@ -93,7 +93,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     public void ActiveHitBox()
     {
         creatureStatus.gameObject.GetComponent<BoxCollider>().enabled = true;
-        creatureStatus.IsAttacked = false;
+        creatureStatus.HitactionFlag = false;
     }
 
     //一部の敵（防御可）と味方
@@ -242,7 +242,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     public void HitAction()
     {
         //ヒットアクション中に再生されないようにする
-        if (creatureStatus.IsAttacked && animator.GetCurrentAnimatorStateInfo(0).IsName("HitAction") is false) animator.SetTrigger(ICreature.hitActionTrigger);
+        if (creatureStatus.HitactionFlag && animator.GetCurrentAnimatorStateInfo(0).IsName("HitAction") is false) animator.SetTrigger(ICreature.hitActionTrigger);
     }
 
     /// <summary>

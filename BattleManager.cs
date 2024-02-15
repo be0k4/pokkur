@@ -25,6 +25,9 @@ public class BattleManager : MonoBehaviour
     public event Action<float> AddToExp;
     public event Action<float> AddDefExp;
 
+    //物理ダメージ計算時に蓄積されるひるみ値
+    float staggerPoint;
+
     async void Start()
     {
         //ロード待機
@@ -113,7 +116,14 @@ public class BattleManager : MonoBehaviour
         float damage = (slashDamage * creatureStatus.SlashResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
-        UpdateBattleUI(damage, true, PhysicalDamageText);
+        //ひるみ値の蓄積とアニメーション再生フラグのオン
+        staggerPoint += damage;
+        if (staggerPoint > creatureStatus.StaggerThreshold)
+        {
+            staggerPoint = 0;
+            creatureStatus.HitactionFlag = true;
+        }
+        UpdateBattleUI(damage, PhysicalDamage);
 
         //経験値を与えるデリゲート関連の処理
         GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
@@ -138,7 +148,14 @@ public class BattleManager : MonoBehaviour
         float damage = (stabDamage * creatureStatus.StabResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
-        UpdateBattleUI(damage, true, PhysicalDamageText);
+        //ひるみ値の蓄積とアニメーション再生フラグのオン
+        staggerPoint += damage;
+        if (staggerPoint > creatureStatus.StaggerThreshold)
+        {
+            staggerPoint = 0;
+            creatureStatus.HitactionFlag = true;
+        }
+        UpdateBattleUI(damage, PhysicalDamage);
 
         GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
@@ -162,7 +179,14 @@ public class BattleManager : MonoBehaviour
         float damage = (strikeDamage * creatureStatus.StrikeResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
-        UpdateBattleUI(damage, true, PhysicalDamageText);
+        //ひるみ値の蓄積とアニメーション再生フラグのオン
+        staggerPoint += damage;
+        if (staggerPoint > creatureStatus.StaggerThreshold)
+        {
+            staggerPoint = 0;
+            creatureStatus.HitactionFlag = true;
+        }
+        UpdateBattleUI(damage, PhysicalDamage);
 
         //経験値を与えるデリゲート関連の処理
         GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
@@ -185,11 +209,18 @@ public class BattleManager : MonoBehaviour
 
         //ダメージの一部を毒にする
         var poison = poisonDamage * 0.3f;
-        //物理ダメージは普通に計算
-        var physical = poisonDamage - poison;
-        var damage = physical - (physical * CalculateToughness());
-        creatureStatus.HealthPoint -= damage;
-        UpdateBattleUI(damage, true, PhysicalDamageText);
+        //物理ダメージは普通に適用
+        var physicalDamage = poisonDamage - poison;
+        physicalDamage = physicalDamage - (physicalDamage * CalculateToughness());
+        creatureStatus.HealthPoint -= physicalDamage;
+        //ひるみ値の蓄積とアニメーション再生フラグのオン
+        staggerPoint += physicalDamage;
+        if (staggerPoint > creatureStatus.StaggerThreshold)
+        {
+            staggerPoint = 0;
+            creatureStatus.HitactionFlag = true;
+        }
+        UpdateBattleUI(physicalDamage, PhysicalDamage);
 
         GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
@@ -202,17 +233,16 @@ public class BattleManager : MonoBehaviour
             await UniTask.Delay(1000);
             var dotDamage = Mathf.RoundToInt(poison / 4);
             creatureStatus.HealthPoint -= dotDamage;
-            UpdateBattleUI(dotDamage, false, PoisonDamageText);
+            UpdateBattleUI(dotDamage, PoisonDamage);
         }
     }
 
     /// <summary>
-    /// HPが増えた、もしくは減った際の処理
+    /// HPが増えた、もしくは減った際のUI処理
     /// </summary>
     /// <param name="damage">受けたダメージ</param>
-    /// <param name="isAttcked">被弾アニメーションを再生するかどうか</param>
-    /// <param name="damageTypeMethod">ダメージ表示の処理</param>
-    public async void UpdateBattleUI(float damage, bool isAttcked, Action<GameObject> damageTypeMethod)
+    /// <param name="damageTypeMethod">ダメージタイプごとの処理</param>
+    public async void UpdateBattleUI(float damage, Action<GameObject> damageTypeMethod)
     {
         //hpバー更新
         hpSlider.value = creatureStatus.HealthPoint;
@@ -220,12 +250,12 @@ public class BattleManager : MonoBehaviour
         //死んだ場合はdestroyされるので処理中断
         if (creatureStatus.HealthPoint <= 0) return;
 
-        //被弾アニメーション再生の決定
-        creatureStatus.IsAttacked = isAttcked;
-
         //ダメージテキストの生成
         var handle = DamageText.LoadAssetAsync<GameObject>();
         var damageUI = await handle.Task;
+
+        //ダメージタイプごとの処理
+        damageTypeMethod(damageUI);
 
         //サイズ調整
         if (damage > 29.5f)
@@ -242,9 +272,6 @@ public class BattleManager : MonoBehaviour
             damageUI.GetComponent<TextMeshProUGUI>().fontSize = 50;
         }
 
-        //色や表示の調整
-        damageTypeMethod(damageUI);
-
         string damageText = Mathf.RoundToInt(damage).ToString();
         damageUI.GetComponent<DamageText>().SetDamageText(damageText);
 
@@ -253,15 +280,15 @@ public class BattleManager : MonoBehaviour
     }
 
     //ダメージタイプごとの処理
-    public static void HealDamageText(GameObject damageText)
+    public static void HealDamage(GameObject damageText)
     {
         damageText.GetComponent<TextMeshProUGUI>().color = Color.green;
     }
-    public static void PoisonDamageText(GameObject damageText)
+    public static void PoisonDamage(GameObject damageText)
     {
         damageText.GetComponent<TextMeshProUGUI>().color = new Color(150, 0, 255);
     }
-    public static void PhysicalDamageText(GameObject damageText)
+    public static void PhysicalDamage(GameObject damageText)
     {
         damageText.GetComponent<TextMeshProUGUI>().color = Color.white;
     }

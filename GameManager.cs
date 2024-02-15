@@ -116,8 +116,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     public event Action badEndTrigger;
     public const int gameOver = 14;
 
-    //3：地面 6：キャラクター 7:エネミー 14:アイテム
-    int layerMask = 1 << 3 | 1 << 6 | 1 << 7 | 1 << 14;
+    //3：地面 6：キャラクター 14:アイテム
+    int layerMask = 1 << 3 | 1 << 6 | 1 << 14;
 
     public List<GameObject> Party { get => party; }
 
@@ -248,7 +248,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //ダンジョン内ではライトが追従する
         if (weatherState is Weather.Dungeon)
         {
-            if (activeObject != null) directionalLight.transform.position = activeObject.transform.position + offset;
+            //if (activeObject != null) directionalLight.transform.position = activeObject.transform.position + offset;
             return;
         }
 
@@ -365,11 +365,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
                     }
                     activeCamera = activeObject.GetComponentInChildren<CinemachineFreeLook>();
                     activeCamera.enabled = true;
-                    break;
-                //敵を攻撃対象に選択
-                case ICreature.layer_enemy:
-                    hitObject = hitObject.transform.Find("HitBox").gameObject;
-                    activeObject.GetComponent<AbstractController>().SetEnemySlots(hitObject);
                     break;
                 default:
                     break;

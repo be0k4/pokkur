@@ -18,6 +18,6 @@ public class Herb : AbstractItem
         var creatureStatus = target.GetComponentInChildren<CreatureStatus>();
         if (creatureStatus is null) return;
         creatureStatus.HealthPoint = Mathf.Min(100, creatureStatus.HealthPoint + itemData.data);
-        target.GetComponentInChildren<BattleManager>().UpdateBattleUI(itemData.data, false, BattleManager.HealDamageText);
+        target.GetComponentInChildren<BattleManager>().UpdateBattleUI(itemData.data, BattleManager.HealDamage);
     }
 }

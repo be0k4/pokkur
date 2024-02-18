@@ -34,9 +34,10 @@ public class EquipmentFrame : MonoBehaviour, IDropHandler
     public void OnDrop(PointerEventData data)
     {
         Draggable dropping = data.pointerDrag.GetComponent<Draggable>();
-
         //ドロップするアイテムが武器でない、または武器が置いてない、またはユニーク武器が置いてある場合はドロップ不可
         if (dropping.Item is not Weapon || GetComponentInChildren<Draggable>().Item == null || GetComponentInChildren<Draggable>().Item.GetItemData().address == ICreature.uniqueWeapon) return;
+        //適切なアイテムなら効果音を流す
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
 
         //親を入れ替える
         var child = GetComponentInChildren<Draggable>();

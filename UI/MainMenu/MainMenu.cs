@@ -30,12 +30,14 @@ public class MainMenu : MonoBehaviour
 
     public void OnOptionClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         configMenu.ActivateMenu();
         DeactiveMenu();
     }
 
     public void OnNewGameClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         //セーブスロットメニューを表示
         saveSlotsMenu.ActivateMenu(false);
         DeactiveMenu();
@@ -43,6 +45,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnLoadGameClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         saveSlotsMenu.ActivateMenu(true);
         DeactiveMenu();
     }
@@ -50,6 +53,7 @@ public class MainMenu : MonoBehaviour
     //コンティニュー先のデータは、シーンロード時に初期化済み
     public void OnContinueClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         //ダブルクリックや誤クリック防止
         DisableButton();
 

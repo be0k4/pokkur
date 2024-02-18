@@ -94,13 +94,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] AssetReferenceT<GameObject> rainPrefab;
     [SerializeField] Light directionalLight;
 
-    [Header("サウンド関連")]
-    [SerializeField] AudioSource uiAudioManager;
-    [SerializeField] AudioClip dialogueSe;
-    [SerializeField] AudioClip recruitSe;
+    [Header("このシーンのBGM")]
     [SerializeField, Tooltip("洞窟内はdaymusicのみ")] AudioClip dayMusic;
     [SerializeField] AudioClip nightMusic;
 
+    [Header("環境関連")]
     [SerializeField] Weather weatherState;
     //ゲーム内で管理する時間
     [SerializeField] float inGameHours;
@@ -180,11 +178,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
         if (Input.GetKeyDown(KeyCode.Tab)) Inventory();
 
         if (Input.GetKeyDown(KeyCode.Escape)) inGameMenu.ActivateMainMenu();
-    }
-
-    public void PlayOneShot(AudioClip clip)
-    {
-        uiAudioManager.PlayOneShot(clip);
     }
 
     /// <summary>
@@ -534,6 +527,13 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //操作不能
         invalid = true;
         var buttons = confirmWindow.GetComponentsInChildren<Button>();
+        //効果音の追加
+        foreach (var button in buttons)
+        {
+            //重複防止
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+        }
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         confirmWindow.gameObject.SetActive(false);
         invalid = false;
@@ -545,7 +545,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// </summary>
     private void Inventory()
     {
-        //UIが表示されていたらfalse(消す)、消えていたらtrue(表示)
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
+
+        //UIが表示されていたらfalse(消す)、非表示ならtrue(表示)
         bool isActive = !inventoryWindow.gameObject.activeSelf;
         inventoryWindow.gameObject.SetActive(isActive);
         textArea.gameObject.SetActive(isActive);
@@ -615,6 +617,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             //インベントリウィンドウを実際のリストと連携
             icons.RemoveAll((e) => e.Item is null);
+            //自動でソートする
             inventory = icons.Select((e) => e.Item).ToList().OrderByDescending(e => e).ThenBy(e => e.GetItemData().itemText).ToList(); ;
 
             //装備品ウィンドウをpokkurに反映
@@ -693,10 +696,21 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 {
                     branches[ii].GetComponentInChildren<TextMeshProUGUI>().text = branchInfo[ii];
                     branches[ii].gameObject.SetActive(true);
+                    //クリック時の処理を追加
+                    //重複防止
+                    branches[ii].onClick.RemoveAllListeners();
+                    branches[ii].onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+
+                    //ボタンの押下で関数フラグにboolを渡す
+                    if (ii is 0)
+                    {
+                        branches[ii].onClick.AddListener(() => functionalFlag.SetFlag(true));
+                    }
+                    else
+                    {
+                        branches[ii].onClick.AddListener(() => functionalFlag.SetFlag(false));
+                    }
                 }
-                //選択肢にメソッドを登録(ボタンの押下で関数フラグにtrue falseを渡す)
-                branches[0].onClick.AddListener(() => functionalFlag.SetFlag(true));
-                branches[1].onClick.AddListener(() => functionalFlag.SetFlag(false));
                 //選択肢が押されるまで待機(ボタンが押されるまでフラグはnull)
                 await UniTask.WhenAny(branches[0].OnClickAsync(), branches[1].OnClickAsync());
                 //フラグの内容次第で分岐以外を削除
@@ -721,7 +735,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 textUI.text = dialogue.ToString();
             }
             await UniTask.WaitUntil(() => Input.GetKeyDown(KeyCode.Return), PlayerLoopTiming.Update, token);
-            uiAudioManager.PlayOneShot(dialogueSe);
+            SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         }
         //再生
         Time.timeScale = 1;
@@ -762,7 +776,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         BlackOut();
         await UniTask.Delay(500, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, token);
         invalid = false;
-        uiAudioManager.PlayOneShot(recruitSe);
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.recruit);
 
         UpdateParty();
         Time.timeScale = 1;
@@ -827,6 +841,13 @@ public class GameManager : MonoBehaviour, IDataPersistence
             }
         }
         var buttons = managementWindow.GetComponentsInChildren<Button>();
+        //効果音の追加
+        foreach (var button in buttons)
+        {
+            //重複防止
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+        }
         //0はConfirm、1はCancel
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         managementWindow.gameObject.SetActive(false);

@@ -17,6 +17,7 @@ public class BGMAudioManager : MonoBehaviour
     [SerializeField, Tooltip("BGMがフェードイン、アウトする時間")] float duration;
 
     //音量調節結果を保持するための変数
+    //オーディオソースが二つあるので、一つの変数で管理
     float volume;
 
     void Awake()
@@ -32,6 +33,7 @@ public class BGMAudioManager : MonoBehaviour
 
     void OnEnable()
     {
+        //インゲーム中のBGM管理はGameMnagerが行っているので、メインメニューのみこれで管理
         SceneManager.sceneLoaded += SwapTrackInMainMenu;
     }
 

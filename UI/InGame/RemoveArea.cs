@@ -11,15 +11,18 @@ using UnityEngine.UI;
 public class RemoveArea : MonoBehaviour, IDropHandler
 {
     [SerializeField] RectTransform manageWindowForParty;
-    private List<GameObject> candidateList = new();
+    List<GameObject> candidateList = new();
 
     /// <summary>
     /// ポックルの削除候補リスト
     /// </summary>
-    public List<GameObject> CandidateList { get => candidateList;}
+    public List<GameObject> CandidateList { get => candidateList; }
 
     public void OnDrop(PointerEventData data)
     {
+        //効果音を流す
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.put);
+
         GameObject dropping = data.pointerDrag;
         var draggable = dropping.GetComponent<Draggable>();
         //ポックル

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,7 +17,17 @@ public class UniqueDialogueControllerForElder : DialogueController
     protected override void Start()
     {
         base.Start();
+        DynamicBind(badEnd);
+        DynamicBind(happyEnd);
         gameManager.badEndTrigger += () => badEnd.Play();
+
+        void DynamicBind(PlayableDirector director)
+        {
+            //効果音を流すためのAudioSourceをバインドするトラック。この時点では何もバインドされていない
+            PlayableBinding audioTrack = director.playableAsset.outputs.First(e => e.streamName == "Audio Track");
+            //動的バインドを行う
+            director.SetGenericBinding(audioTrack.sourceObject, SEAudioManager.instance.GetSeAudio());
+        }
     }
 
     async void Update()
@@ -37,7 +46,7 @@ public class UniqueDialogueControllerForElder : DialogueController
             }
 
             //オーブを持っている場合はそれ用の会話をする
-            if(GameManager.inventory.Any(e => e is Orb))
+            if (GameManager.inventory.Any(e => e is Orb))
             {
                 //今から渡すオーブの種類を列挙型で取得
                 Orb orb = (Orb)GameManager.inventory.First(e => e is Orb);
@@ -45,9 +54,9 @@ public class UniqueDialogueControllerForElder : DialogueController
                 //残りのオーブを計算
                 //全オーブの種類 - (集めたオーブ + 1)
                 int count = Enum.GetValues(typeof(Orb.Orbs)).Length - (collectedOrbs.Where(e => e.gameObject.activeSelf).Count() + 1);
-                
+
                 //ハッピーエンディング
-                if(count is 0)
+                if (count is 0)
                 {
                     var dialogue = new TextAsset($"All the orbs have now been collected.\r\nThanks for working so hard this far.\r\nMy dream will finally come true!");
                     await gameManager.Dialogue(dialogue, token);

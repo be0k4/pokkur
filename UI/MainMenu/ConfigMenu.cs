@@ -15,7 +15,7 @@ public class ConfigMenu : MonoBehaviour
     [SerializeField] Toggle screenToggle;
     [SerializeField] TMP_Dropdown resolutionDropdown;
     [SerializeField] TMP_Dropdown graphicDropdown;
-    [SerializeField] AudioSource uiAudio;
+    SEAudioManager seAudio;
     BGMAudioManager bgmAudio;
 
     Resolution[] resolutions;
@@ -31,6 +31,7 @@ public class ConfigMenu : MonoBehaviour
 
     void Start()
     {
+        seAudio = SEAudioManager.instance;
         bgmAudio = BGMAudioManager.instance;
         InitializeConfig(configData);
     }
@@ -47,9 +48,9 @@ public class ConfigMenu : MonoBehaviour
     }
 
     //UIìoò^óp
-    public void SetUIVolume()
+    public void SetSEVolume()
     {
-        uiAudio.volume = seVolumeSlider.value;
+        seAudio.SetSEVolume(seVolumeSlider.value);
     }
 
     public void SetBGMVolume()
@@ -78,6 +79,7 @@ public class ConfigMenu : MonoBehaviour
     /// </summary>
     public void OnBackClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         mainMenu.ActivateMenu();
         DeactiveMenu();
         //ÉZÅ[Éu
@@ -99,8 +101,8 @@ public class ConfigMenu : MonoBehaviour
         if (configData is null) return;
 
         //se
-        seVolumeSlider.value = configData.uiVolume;
-        uiAudio.volume = configData.uiVolume;
+        seVolumeSlider.value = configData.seVolume;
+        seAudio.SetSEVolume(configData.seVolume);
 
         //bgm
         bgmVolumeSlider.value = configData.bgmVolume;

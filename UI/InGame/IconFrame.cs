@@ -25,6 +25,8 @@ public class IconFrame : MonoBehaviour, IDropHandler
         GameObject dropping = data.pointerDrag;
         //使用可能なアイテム以外、またはポックルがいない(ボタンのinteractableがfalse)
         if (dropping.GetComponent<Draggable>().Item is not AbstractItem item || !GetComponentInChildren<Button>().interactable) return;
+        ////適切なアイテムなら効果音を流す
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.use);
 
         consumableItems.Add(item);
         Image icon = dropping.GetComponent<Image>();

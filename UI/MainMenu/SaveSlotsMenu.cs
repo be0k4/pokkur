@@ -29,12 +29,13 @@ public class SaveSlotsMenu : MonoBehaviour
         token = this.GetCancellationTokenOnDestroy();
     }
 
-    //ボタン系
     public async void OnSaveSlotClicked(SaveSlot saveSlot)
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         //ダブルクリックや誤クリック防止のため全てクリック不可
         ReverseMenuButtons(false);
 
+        //ロード
         if (isLoadingGame)
         {
             DataPersistenceManager.instance.LoadSelectedProfileId(saveSlot.ProfileId);
@@ -51,6 +52,13 @@ public class SaveSlotsMenu : MonoBehaviour
                 //確認ウィンドウ表示
                 confirmWindow.gameObject.SetActive(true);
                 var buttons = confirmWindow.GetComponentsInChildren<Button>();
+                //効果音の追加
+                foreach (var button in buttons)
+                {
+                    //重複防止
+                    button.onClick.RemoveAllListeners();
+                    button.onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+                }
                 var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
                 confirmWindow.gameObject.SetActive(false);
 
@@ -72,12 +80,20 @@ public class SaveSlotsMenu : MonoBehaviour
 
     public async void OnClearClicked(SaveSlot saveSlot)
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         //誤クリック防止のため全てクリック不可
         ReverseMenuButtons(false);
 
         //確認ウィンドウ表示
         confirmWindow.gameObject.SetActive(true);
         var buttons = confirmWindow.GetComponentsInChildren<Button>();
+        //効果音の追加
+        foreach (var button in buttons)
+        {
+            //重複防止
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+        }
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         confirmWindow.gameObject.SetActive(false);
 
@@ -99,6 +115,7 @@ public class SaveSlotsMenu : MonoBehaviour
 
     public void OnBackClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         mainMenu.ActivateMenu();
         DeactiveMenu();
     }

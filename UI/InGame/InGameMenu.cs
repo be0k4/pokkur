@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 /// <summary>
-/// インゲームのメニュー画面
+/// インゲーム中のメニュー画面
 /// <para>タイトル画面のメニュー機能を一部集約したもの</para>
 /// </summary>
 public class InGameMenu : MonoBehaviour
@@ -31,7 +31,7 @@ public class InGameMenu : MonoBehaviour
     [SerializeField] Toggle screenToggle;
     [SerializeField] TMP_Dropdown resolutionDropdown;
     [SerializeField] TMP_Dropdown graphicDropdown;
-    [SerializeField] AudioSource uiAudio;
+    SEAudioManager seAudio;
     BGMAudioManager bgmAudio;
     Resolution[] resolutions;
     ConfigData configData;
@@ -48,6 +48,7 @@ public class InGameMenu : MonoBehaviour
     {
         saveSlots = GetComponentsInChildren<SaveSlot>(true);
         token = this.GetCancellationTokenOnDestroy();
+        seAudio = SEAudioManager.instance;
         bgmAudio = BGMAudioManager.instance;
         InitializeConfig();
     }
@@ -62,6 +63,13 @@ public class InGameMenu : MonoBehaviour
         confirmWindow.gameObject.SetActive(true);
         //選択に応じて、上書きもしくは無かったことにする
         var buttons = confirmWindow.GetComponentsInChildren<Button>();
+        //効果音の追加
+        foreach (var button in buttons)
+        {
+            //重複防止
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
+        }
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         confirmWindow.gameObject.SetActive(false);
         return value;
@@ -70,12 +78,14 @@ public class InGameMenu : MonoBehaviour
     //メインメニュー関連//
     public void OnSaveClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         ActivateSaveSlotsMenu();
         DeactiveMainMenu();
     }
 
     public void OnCloseClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         DeactiveMainMenu();
         //操作可能にする
         GameManager.invalid = false;
@@ -84,6 +94,7 @@ public class InGameMenu : MonoBehaviour
 
     public void OnOptionClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         ActivateOptionMenu();
         DeactiveMainMenu();
     }
@@ -101,6 +112,7 @@ public class InGameMenu : MonoBehaviour
 
     public async void OnTitleClicked()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         var value = await ConfirmWindow();
         if (value is 1) return;
         //操作可能にする
@@ -112,12 +124,14 @@ public class InGameMenu : MonoBehaviour
     //セーブスロットメニュー関連//
     public void OnBackClickedInSaveSlotsMenu()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         ActivateMainMenu();
         DeactiveSaveSlotsMenu();
     }
 
     public async void OnSaveSlotClicked(SaveSlot saveSlot)
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         //データが有る場合
         if (saveSlot.HasData)
         {
@@ -174,22 +188,17 @@ public class InGameMenu : MonoBehaviour
     //オプションメニュー関連//
 
     /// <summary>
-    /// GUIの初期化
+    /// メインメニューでロードした設定はすでに反映されているので、UIの初期化のみ行う
     /// </summary>
     void InitializeConfig()
     {
         //ドロップダウン
         InitializeResolution();
         InitializeGraphic();
-
         //se
-        seVolumeSlider.value = configData.uiVolume;
-        //uiだけロード
-        uiAudio.volume = configData.uiVolume;
-
+        seVolumeSlider.value = seAudio.GetSEVolume();
         //bgm
         bgmVolumeSlider.value = bgmAudio.GetBGMVolume();
-
         //ウィンドウ・フルスクリーン
         screenToggle.isOn = Screen.fullScreen;
 
@@ -223,6 +232,7 @@ public class InGameMenu : MonoBehaviour
 
     public void OnBackClickedInOption()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         ActivateMainMenu();
         DeactiveOptionMenu();
         //セーブ
@@ -241,9 +251,9 @@ public class InGameMenu : MonoBehaviour
         this.optionMenu.gameObject.SetActive(false);
     }
 
-    public void SetUIVolume()
+    public void SetSEVolume()
     {
-        uiAudio.volume = seVolumeSlider.value;
+        seAudio.SetSEVolume(seVolumeSlider.value);
     }
 
     public void SetBGMVolume()

@@ -14,7 +14,7 @@ public class PokkurController : AbstractController
     bool isFollowing = false;
     //ロックオブジェクト
     public static object _lock = new();
-    //Dead()はDestroyまでの遅延があるので二度呼び出されないようにするためのフラグ
+    //Destroy()は実際に破棄されるまでの遅延があるので、二度呼び出されないようにするためのフラグ
     bool isDead;
 
     /// <summary>
@@ -25,7 +25,6 @@ public class PokkurController : AbstractController
 
     async void Start()
     {
-        creatureState = State.Idle;
         //ロード待機
         await UniTask.WaitWhile(() => GameManager.invalid);
         //パラメータの取得
@@ -169,9 +168,9 @@ public class PokkurController : AbstractController
     /// </summary>
     public override async void Dead()
     {
+        //Destroyは次のフレームで行われるため、次のフレームではこのメソッドをキャンセルする
         if (creatureStatus.HealthPoint > 0 || isDead) return;
-
-        //一度だけ呼び出されるようにする
+        //二度呼び出されないようにする
         isDead = true;
 
         var handle = deathEffect.LoadAssetAsync<GameObject>();
@@ -200,5 +199,7 @@ public class PokkurController : AbstractController
     {
         if (other.gameObject.layer is not ICreature.layer_item) return;
         other.gameObject.GetComponentInParent<ICollectable>().Collect();
+        //効果音を流す
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
     }
 }

@@ -15,5 +15,7 @@ MonoBehaviour:
   data: 0
   icon: {fileID: 21300000, guid: dc125d49f28111a4ea6481560e654eb6, type: 3}
   prefab: {fileID: 0}
-  itemText: "A shining golden orb. \nLet's take it to the elder."
+  itemText: 'Golden orb
+
+    Let''s take it to the elder.'
   address: GoldenOrb.prefab

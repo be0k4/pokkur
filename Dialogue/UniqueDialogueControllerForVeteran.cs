@@ -86,6 +86,7 @@ public class UniqueDialogueControllerForVeteran : DialogueController
             pokkur.GetComponentInChildren<TextMeshProUGUI>().text = serialized.name;
             var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
             parameter.Power = serialized.power;
+            parameter.MaxHealthPoint = serialized.maxHealthPoint;
             parameter.HealthPoint = serialized.healthPoint;
             parameter.MovementSpeed = serialized.movementSpeed;
             parameter.Dexterity = serialized.dexterity;
@@ -122,7 +123,7 @@ public class UniqueDialogueControllerForVeteran : DialogueController
             weaponSlotPath = weaponSlotPath.Remove(0, index);
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,
-                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.MaxHealthPoint, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position);
 
             data.standby.Add(serializable);

@@ -112,6 +112,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     event Action weatherChangedTrigger;
     //バッドエンディングを再生するデリゲート
     public event Action badEndTrigger;
+    //ゲームオーバーとなる日数
     public const int gameOver = 14;
 
     //3：地面 6：キャラクター 14:アイテム
@@ -1002,6 +1003,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             pokkur.GetComponentInChildren<TextMeshProUGUI>().text = data.party[i].name;
             var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
             parameter.Power = data.party[i].power;
+            parameter.MaxHealthPoint = data.party[i].maxHealthPoint;
             parameter.HealthPoint = data.party[i].healthPoint;
             parameter.MovementSpeed = data.party[i].movementSpeed;
             parameter.Dexterity = data.party[i].dexterity;
@@ -1065,7 +1067,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,
-                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.MaxHealthPoint, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
 
             data.party.Add(serializable);

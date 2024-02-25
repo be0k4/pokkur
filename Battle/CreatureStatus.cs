@@ -10,7 +10,8 @@ public class CreatureStatus : MonoBehaviour
 {
     [Header("調整用ステータス")]
     [SerializeField, Tooltip("種族")] Species species;
-    [SerializeField, Tooltip("HP"), Range(0, 100)] float healthPoint;
+    [SerializeField, Tooltip("最大HP"), Range(0, 200)] float maxHealthPoint;
+    [SerializeField, Tooltip("現在HP"), Range(0, 200)] float healthPoint;
     [SerializeField, Tooltip("移動速度"), Range(1, 10)] float movementSpeed;
     [SerializeField, Tooltip("力"), Range(1, 100)] float power;
     [SerializeField, Tooltip("熟練度"), Range(1, 100)] float dexterity;
@@ -66,6 +67,7 @@ public class CreatureStatus : MonoBehaviour
 
     //ゲッターセッター
     public Species Species { get => species; }
+    public float MaxHealthPoint { get => maxHealthPoint; set => maxHealthPoint = value; }
     public float HealthPoint { get => Mathf.RoundToInt(healthPoint); set => healthPoint = value; }
     public float MovementSpeed { get => Mathf.RoundToInt(movementSpeed); set => movementSpeed = value; }
     public float Power { get => Mathf.RoundToInt(power); set => power = value; }

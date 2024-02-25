@@ -12,7 +12,10 @@ public class PrefabInitializer : EditorWindow
     GameObject weapon;
     int index;
     string[] weaponTags = new string[] { ICreature.poison, ICreature.slash, ICreature.stab, ICreature.strike };
-    bool isAvailableWeapon;
+    /// <summary>
+    /// ユニーク武器かどうか
+    /// </summary>
+    bool isUniqueWeapon;
 
     [MenuItem("EditorExtensions/PrefabInitializer")]
     static void ShowWindow()
@@ -29,10 +32,36 @@ public class PrefabInitializer : EditorWindow
         prefabType = (PrefabType)EditorGUILayout.EnumPopup("作成したいprefabの種類", prefabType);
         prefab = (GameObject)EditorGUILayout.ObjectField("prefab", prefab, typeof(GameObject), true);
 
-        if (prefabType is PrefabType.Weapon)
+        switch (prefabType)
         {
-            index = EditorGUILayout.Popup("武器の種類", index, weaponTags);
-            isAvailableWeapon = EditorGUILayout.Toggle("アイテムとして取得可能か", isAvailableWeapon);
+            case PrefabType.Player:
+                EditorGUILayout.LabelField("このセットアップではプレイヤーオブジェクト用prefabを作成します。\n" +
+                    "(注意)\n・セットアップ後に必ずコンポーネントの値の確認と調整をすること。\n・また武器を配置するためのWeaponSlotの作成をすること。", EditorStyles.wordWrappedLabel);
+                break;
+            case PrefabType.Recruitable:
+                EditorGUILayout.LabelField("このセットアップではリクルート用prefabを作成します。\n" +
+                    "(注意)\n・すでにプレイヤーオブジェクト用のセットアップが完了していること。\n" +
+                    "すでに武器のセットアップが完了していること。", EditorStyles.wordWrappedLabel);
+                break;
+            case PrefabType.Enemy:
+                EditorGUILayout.LabelField("このセットアップではエネミーprefabを作成します。\n" +
+                    "(注意)\n・すでに武器のセットアップが完了していること。\n", EditorStyles.wordWrappedLabel);
+                break;
+            case PrefabType.Weapon:
+                EditorGUILayout.LabelField("このセットアップでは取得可能アイテムとしての武器prefabを作成します。\n" +
+                    "(注意)\n・セットアップ後に必ず当たり判定コライダの位置を調整すること。\n" +
+                    "・リクルート用prefbabをセットアップする際に、このセットアップを行った武器を所持している事を想定しているため、プレイアブルキャラではユニーク武器でもこのセットアップを行うこと。(例)ウルフポックルの爪など\n" +
+                    "・エネミーが使用するユニーク武器については、リクルートを想定しないためこのセットアップは対象外。専用のセットアップを使用すること。", EditorStyles.wordWrappedLabel);
+                index = EditorGUILayout.Popup("武器の種類", index, weaponTags);
+                isUniqueWeapon = EditorGUILayout.Toggle("特定のポックル専用武器か否か", isUniqueWeapon);
+                break;
+            case PrefabType.Weapon_EnemyUnique:
+                EditorGUILayout.LabelField("このセットアップではエネミーが使用するユニーク武器の初期化を行います。\n" +
+                    "(注意)\n・セットアップ後に必ず当たり判定コライダの位置を調整すること。\n" +
+                    "・また武器を配置するためのWeaponSlotの作成をすること。\n" +
+                    "・ダメージパラメータを設定すること。", EditorStyles.wordWrappedLabel);
+                index = EditorGUILayout.Popup("武器の種類", index, weaponTags);
+                break;
         }
 
         if (prefab != null && GUILayout.Button("セットアップ"))
@@ -44,22 +73,26 @@ public class PrefabInitializer : EditorWindow
                     break;
 
                 case PrefabType.Recruitable
-                //プレイヤーprefabとしてセットアップ済みかつ、武器の設定も済んでいる
+                //when句は簡易的なヴァリデーションチェック
                 when prefab.tag is ICreature.player && prefab.GetComponentInChildren<Weapon>() is not null:
                     InitializeRecruitableObject();
                     break;
 
                 case PrefabType.Enemy
-                when prefab.GetComponentInChildren<Weapon>() is not null:
+                //when句は簡易的なヴァリデーションチェック
+                when prefab.GetComponentInChildren<Weapon>() != null || prefab.GetComponentInChildren<AttackCalculater>() != null:
                     InitializeEnemyObject();
                     break;
 
                 case PrefabType.Weapon:
-
+                    InitializeWeapon();
+                    break;
+                case PrefabType.Weapon_EnemyUnique:
+                    InitializeWeapon_EnemyUnique();
+                    break;
                 default:
-                    Debug.LogError($"いずれの条件にも当てはまりません。" +
-                        $"\n設定しようとしている種類：{prefabType}" +
-                        $"\n対象prefabのタグ：{prefab.tag}\n武器の設定が済んでいるか{prefab.GetComponentInChildren<Weapon>() is not null}");
+                    Debug.LogError($"いずれの条件にも当てはまりません。注意事項を確認し、必要な手順を済ませてください。" +
+                        $"\n設定しようとしている種類：{prefabType}");
                     break;
             }
         }
@@ -106,6 +139,9 @@ public class PrefabInitializer : EditorWindow
         hitBox.layer = ICreature.layer_playerHitBox;
     }
 
+    /// <summary>
+    /// リクルート用のprefabを作成する。
+    /// </summary>
     void InitializeRecruitableObject()
     {
         prefab.name = prefab.name + "_Recruitable";
@@ -117,20 +153,23 @@ public class PrefabInitializer : EditorWindow
         weapon = prefab.GetComponentInChildren<Weapon>().gameObject;
         weapon.AddComponent<AttackCalculater>();
 
-        //アイテムコライダの付いた武器を持っている場合
-        if (weapon.transform.childCount > 0)
+        //特定のポックル専用武器の場合は処理をスキップ
+        if (weapon.transform.childCount is 0) return;
+
+        //アイテムコライダを削除
+        try
         {
-            try
-            {
-                DestroyImmediate(weapon.transform.GetChild(0).gameObject);
-            }
-            catch (InvalidOperationException)
-            {
-                Debug.LogError("prefabの一部なのでコライダを削除できませんでした。手動でコライダを削除してください。");
-            }
+            DestroyImmediate(weapon.transform.GetChild(0).gameObject);
+        }
+        catch (InvalidOperationException)
+        {
+            Debug.LogError("prefabの一部なのでコライダを削除できません。手動でコライダを削除してください。");
         }
     }
 
+    /// <summary>
+    /// エネミーprefabを作成する。
+    /// </summary>
     async void InitializeEnemyObject()
     {
         //コンポーネントをアタッチ
@@ -165,38 +204,64 @@ public class PrefabInitializer : EditorWindow
         var hitBox = prefab.GetComponentInChildren<CreatureStatus>().gameObject;
         hitBox.tag = ICreature.enemy;
         hitBox.layer = ICreature.layer_enemyHitBox;
-
+        
+        //Weaponコンポーネントがnullならユニーク武器
+        bool isUnique = prefab.GetComponentInChildren<Weapon>() is null;
+        //専用武器を持っているならスキップ
+        if (isUnique) return;
         weapon = prefab.GetComponentInChildren<Weapon>().gameObject;
         weapon.AddComponent<AttackCalculater>();
 
         //取得可能武器を持っている場合、アイテムコライダを外す
-        if (weapon.transform.childCount > 0)
+        //アイテムコライダを削除
+        try
         {
-            weapon.transform.GetChild(0).gameObject.SetActive(false);
+            DestroyImmediate(weapon.transform.GetChild(0).gameObject);
+        }
+        catch (InvalidOperationException)
+        {
+            Debug.LogError("prefabの一部なのでコライダを削除できません。手動でコライダを削除してください。");
         }
     }
 
+    /// <summary>
+    /// 取得可能アイテムとしての武器prefabを作成する。
+    /// </summary>
     async void InitializeWeapon()
     {
         //タグとレイヤーを設定
         prefab.layer = ICreature.layer_weapon;
         prefab.tag = this.weaponTags[this.index];
-        //boxcollider
+        //当たり判定で使うコライダを設定
         var collider = prefab.AddComponent<BoxCollider>();
         collider.size = new Vector3(0.1f, 0.15f, 0.3f);
         collider.enabled = false;
         //weapon
         prefab.AddComponent<Weapon>();
+        //ユニーク武器はスキップ
+        if (isUniqueWeapon is true) return;
         //itemColliderをインスタンス化
-        if (isAvailableWeapon)
-        {
-            //インスタンス化して子オブジェクトに設定
-            var handle = Addressables.LoadAssetAsync<GameObject>("ItemCollider.prefab");
-            var itemCollider = await handle.Task;
-            var instance = Instantiate(itemCollider, prefab.transform);
-            instance.name = instance.name.Remove(instance.name.IndexOf("("));
-            Addressables.Release(handle);
-        }
+        //インスタンス化して子オブジェクトに設定
+        var handle = Addressables.LoadAssetAsync<GameObject>("ItemCollider.prefab");
+        var itemCollider = await handle.Task;
+        var instance = Instantiate(itemCollider, prefab.transform);
+        instance.name = instance.name.Remove(instance.name.IndexOf("("));
+        Addressables.Release(handle);
+    }
+
+    /// <summary>
+    /// エネミーのユニーク武器を初期化する　例)βサウルスの牙など
+    /// </summary>
+    public void InitializeWeapon_EnemyUnique()
+    {
+        prefab.layer = ICreature.layer_weapon;
+        prefab.tag = this.weaponTags[this.index];
+        //当たり判定で使うコライダを設定
+        var collider = prefab.AddComponent<BoxCollider>();
+        collider.size = new Vector3(0.01f, 0.01f, 0.01f);
+        collider.enabled = false;
+        //attackCalculator
+        prefab.AddComponent<AttackCalculater>();
     }
 
     enum PrefabType
@@ -204,6 +269,7 @@ public class PrefabInitializer : EditorWindow
         Player,
         Recruitable,
         Enemy,
-        Weapon
+        Weapon,
+        Weapon_EnemyUnique
     }
 }

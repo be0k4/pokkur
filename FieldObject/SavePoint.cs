@@ -45,12 +45,12 @@ public class SavePoint : AbstractInteractable
 
     void Rest()
     {
-        //パーティの全員を回復
+        //パーティの全員を全回復
         foreach (var pokkur in gameManager.Party)
         {
             var status = pokkur.GetComponentInChildren<CreatureStatus>();
-            var heal = 100 - status.HealthPoint;
-            status.HealthPoint = 100;
+            var heal = status.MaxHealthPoint - status.HealthPoint;
+            status.HealthPoint = status.MaxHealthPoint;
             pokkur.GetComponentInChildren<BattleManager>().UpdateBattleUI(heal, BattleManager.HealDamage);
         }
 

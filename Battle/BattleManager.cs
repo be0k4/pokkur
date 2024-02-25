@@ -34,7 +34,8 @@ public class BattleManager : MonoBehaviour
         await UniTask.WaitWhile(() => GameManager.invalid);
         //HPバーの設定
         hpSlider = localUI.GetComponentInChildren<Slider>(true);
-        hpSlider.maxValue = creatureStatus.HealthPoint;
+        if(creatureStatus.MaxHealthPoint < creatureStatus.HealthPoint) Debug.LogError($"最大HPが現在HPより小さいです。修正してください。");
+        hpSlider.maxValue = creatureStatus.MaxHealthPoint;
         hpSlider.value = creatureStatus.HealthPoint;
 
         //コールバック用メソッドをデリゲートへ登録
@@ -50,6 +51,11 @@ public class BattleManager : MonoBehaviour
     {
         //UI要素をカメラの視点に合わせる
         localUI.transform.rotation = Camera.main.transform.rotation;
+        //ずっと前の戦闘が影響しないように、戦闘中に影響を与えない範囲で減衰していく
+        if(staggerPoint > 0)
+        {
+            staggerPoint -= 0.001f;
+        }
     }
 
     /// <summary>

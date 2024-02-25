@@ -78,7 +78,8 @@ public abstract class AbstractController : MonoBehaviour, ICreature
     }
 
     //敵味方共通
-    //攻撃アニメーション終了時、被弾アニメーション時に攻撃コライダを無効にする
+    //攻撃アニメーション終了時、被弾アニメーション再生時に攻撃コライダを無効にする
+    //IsAttackingがfalseになるとガード判定を行ってしまうので、ガード可能なキャラの場合は呼び出し位置に注意する。
     public async UniTask InactiveAttackCollider()
     {
         var weaponSlot = weaponSlotList.FirstOrDefault((e) => { return e.childCount > 0; });

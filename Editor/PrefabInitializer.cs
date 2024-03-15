@@ -204,7 +204,7 @@ public class PrefabInitializer : EditorWindow
         var hitBox = prefab.GetComponentInChildren<CreatureStatus>().gameObject;
         hitBox.tag = ICreature.enemy;
         hitBox.layer = ICreature.layer_enemyHitBox;
-        
+
         //Weaponコンポーネントがnullならユニーク武器
         bool isUnique = prefab.GetComponentInChildren<Weapon>() is null;
         //専用武器を持っているならスキップ
@@ -234,6 +234,7 @@ public class PrefabInitializer : EditorWindow
         prefab.tag = this.weaponTags[this.index];
         //当たり判定で使うコライダを設定
         var collider = prefab.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
         collider.size = new Vector3(0.1f, 0.15f, 0.3f);
         collider.enabled = false;
         //weapon
@@ -258,6 +259,7 @@ public class PrefabInitializer : EditorWindow
         prefab.tag = this.weaponTags[this.index];
         //当たり判定で使うコライダを設定
         var collider = prefab.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
         collider.size = new Vector3(0.01f, 0.01f, 0.01f);
         collider.enabled = false;
         //attackCalculator

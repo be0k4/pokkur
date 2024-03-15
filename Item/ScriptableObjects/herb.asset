@@ -17,7 +17,5 @@ MonoBehaviour:
   prefab: {fileID: 39575455936016839, guid: 7ccfffe4a2731dd4fa357c9f084087eb, type: 3}
   itemText: 'Green Herb
 
-    Heal 20
-
-    Medical herb.'
-  address: herb.prefab
+    Heal 20'
+  address: Herb.prefab

@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
-  m_Name: woodSpear
+  m_Name: drop_green
   m_EditorClassIdentifier: 
-  data: 5
-  icon: {fileID: 21300000, guid: 9fadab219f108ec498b7fea4ffe06781, type: 3}
-  prefab: {fileID: 4211049706788997695, guid: 9b716aeed18269c48ab0f41160cd7eef, type: 3}
-  itemText: 'Wood Spear
+  data: 20
+  icon: {fileID: 21300000, guid: ac1d107ff71b6fd4199021bed150fcf1, type: 3}
+  prefab: {fileID: 7261369943718715834, guid: 8d0d2d7f281223d42b6f1ce8036ae2b6, type: 3}
+  itemText: 'Liquid Drop
 
-    Damage 5'
-  address: woodSpear.prefab
+    Get exp'
+  address: Drop_green.prefab

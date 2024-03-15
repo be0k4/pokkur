@@ -38,7 +38,7 @@ public class SerializablePokkur
     public Vector3 position;
 
     public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, 
-        Resistance slashResist, Resistance stabResist, Resistance strikeResist, List<Skill> skills, float maxHealthPoint, float healthPoint, float movementSpeed,
+        Resistance slashResist, Resistance stabResist, Resistance strikeResist, List<Skill> skills, float healthPoint, float movementSpeed,
         float powExp, float dexExp, float toExp, float asExp, float defExp, string pokkurAddress, string weaponAddress, string weaponSlotPath, Vector3 position)
     {
         //ステータス
@@ -52,7 +52,7 @@ public class SerializablePokkur
         this.stabResist = stabResist;
         this.strikeResist = strikeResist;
         this.skills = skills;
-        this.maxHealthPoint = maxHealthPoint;
+        //this.maxHealthPoint = maxHealthPoint;
         this.healthPoint = healthPoint;
         this.movementSpeed = movementSpeed;
 

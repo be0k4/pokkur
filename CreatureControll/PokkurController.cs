@@ -178,11 +178,6 @@ public class PokkurController : AbstractController
         Instantiate(prefab, transform.position, Quaternion.identity);
         Addressables.Release(handle);
 
-        lock (_lock)
-        {
-            ICreature.isDead = true;
-        }
-
         //破棄する前に、フォローターゲットの親子関係を解除して位置を戻してあげる
         var followingTargets = transform.Find("FollowingTargets");
         if (followingTargets is not null)

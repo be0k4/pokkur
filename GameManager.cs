@@ -115,8 +115,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //ゲームオーバーとなる日数
     public const int gameOver = 14;
 
-    //3：地面 6：キャラクター 14:アイテム
-    int layerMask = 1 << 3 | 1 << 6 | 1 << 14;
+    //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム
+    int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14;
 
     public List<GameObject> Party { get => party; }
 
@@ -170,9 +170,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         if (Input.GetKeyDown(KeyCode.S)) statusWindow.gameObject.SetActive(!statusWindow.gameObject.activeSelf);
 
-        if (ICreature.isDead)
+        //パーティに死者が出た
+        if (party.Any(e => e == null))
         {
-            ICreature.isDead = false;
             UpdateParty();
         }
 
@@ -372,9 +372,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     private void RightMouseButton()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //Rayの当たり先はキャラクターコントローラーでなくHitBoxのコライダを想定(メッシュに合わせてサイズを変更しやすい)
         if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, layerMask))
         {
-            GameObject hitObject = hitInfo.collider.gameObject;
+            //NPCを除外したいのでルートオブジェクトのレイヤーで判断
+            GameObject hitObject = hitInfo.collider.transform.root.gameObject;
             switch (hitObject.layer)
             {
                 case ICreature.layer_player:
@@ -390,7 +392,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// <summary>
     /// ステータスウィンドウを更新する。
     /// </summary>
-    /// <param name="target">ステータスウィンドウに情報を表示する対象</param>
+    /// <param name="target">ステータスウィンドウに情報を表示する対象(プレイヤーキャラorエネミー)</param>
     public void UpdateStatusWindow(GameObject target)
     {
         PokkurController pokkur = target.GetComponent<PokkurController>();
@@ -477,9 +479,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 int lamdaIndex = i;
                 buttons[i].onClick.AddListener(() => { ChangeActiveCharacterCamera(lamdaIndex); });
 
-                //パーティの先頭はisFollowerをオフ、それ以外は追従対象を設定する                
+                //パーティの先頭            
                 if (i == 0)
                 {
+                    //追従対象となるオブジェクトを子に設定し、アクティブを切り替える
                     party[i].GetComponent<PokkurController>().IsFollowing = false;
                     followingTargets.transform.SetParent(party[i].transform, false);
                     activeObject = party[i];
@@ -488,14 +491,16 @@ public class GameManager : MonoBehaviour, IDataPersistence
                     UpdateStatusWindow(activeObject);
 
                 }
+                //仲間
                 else
                 {
-                    party[i].GetComponent<PokkurController>().FollowingTarget = followingTargets.GetComponentsInChildren<Transform>().FirstOrDefault((e) => e.name.Contains($"{i}"));
+                    //追従対象を設定
+                    party[i].GetComponent<PokkurController>().FollowingTarget = followingTargets.GetComponentsInChildren<Transform>()[i];
                 }
             }
+            //パーティに空きがある場合
             else
             {
-                //パーティが4人未満の場合
                 icons[i].color = new Color32(255, 255, 255, 0);
                 names[i].text = "";
                 buttons[i].interactable = false;
@@ -639,6 +644,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
                     ICreature.slash => "Sword",
                     ICreature.strike => "Club",
                     ICreature.stab => "Spear",
+                    //毒武器はとりあえずソードにしとく
+                    ICreature.poison => "Sword",
                     _ => null
                 };
                 newWeapon.transform.SetParent(weaponSlotParent.GetComponentsInChildren<Transform>().First(e => e.name.Contains(weaponType)));
@@ -804,7 +811,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// </summary>
     public async UniTask ManageParty(List<GameObject> standby, List<Transform> standbyPositionList, CancellationToken token)
     {
-        //パーティ4、待機所4でドラッグ可能なUIを表示。
+        //パーティ3、待機所6でドラッグ可能なUIを表示。
         //パーティと待機所を参照してUIにpokkurのデータを保持させる。
         Time.timeScale = 0;
         managementWindow.gameObject.SetActive(true);
@@ -827,7 +834,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 partyIcons[i].GetComponentInChildren<TextMeshProUGUI>().text = null;
                 partyIcons[i].GetComponent<Image>().raycastTarget = false;
             }
+        }
 
+        for(var i = 0; i < standbyIcons.Length; i++)
+        {
             if (i < standby.Count())
             {
                 standbyIcons[i].Pokkur = standby[i];
@@ -841,8 +851,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 standbyIcons[i].GetComponent<Image>().raycastTarget = false;
             }
         }
-        var buttons = managementWindow.GetComponentsInChildren<Button>();
+
         //効果音の追加
+        var buttons = managementWindow.GetComponentsInChildren<Button>();
         foreach (var button in buttons)
         {
             //重複防止
@@ -864,10 +875,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             return;
         }
 
-        //出現位置の取得
-        //アクティブオブジェクトを消す可能性があるので、必要な情報を削除前に取得
-        var followingList = followingTargets.GetComponentsInChildren<Transform>().ToList();
-        followingList.RemoveAt(0);
+        //追従目標の初期化と出現位置の取得
         followingTargets.transform.ResetTransform();
         var stayPosition = activeObject.transform.position;
         stayPosition = new Vector3(stayPosition.x, stayPosition.y, stayPosition.z);
@@ -890,12 +898,17 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //暗転
         BlackOut();
         await UniTask.Delay(1000, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, token);
+
         //UI上のパーティと待機所を反映
         var newParty = managementWindow.Find("Party").GetComponentsInChildren<ManagementIcon>().Select(e => e.Pokkur).ToList();
         newParty.RemoveAll(e => e is null);
+        if (newParty.Count() > ICreature.partyLimit) Debug.LogError("パーティの上限を超えています。");
         party = newParty;
+
         var newStandby = managementWindow.Find("Standby").GetComponentsInChildren<ManagementIcon>().Select(e => e.Pokkur).ToList();
         newStandby.RemoveAll(e => e is null);
+        if (newStandby.Count() > ICreature.standbyLimit) Debug.LogError("スタンバイの上限を超えています。");
+        //standby = newStandby;
         standby.Clear();
         foreach (var pokkur in newStandby)
         {
@@ -905,7 +918,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //新しいパーティに更新する
         UpdateParty();
         //tranformとコンポーネントをセットアップ
-        for (var i = 0; i < ICreature.partyLimit; i++)
+        for (var i = 0; i < ICreature.standbyLimit; i++)
         {
             if (i < standby.Count)
             {
@@ -915,6 +928,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 //すでにセットアップされていた場合はスキップ
                 if (standby[i].layer is not ICreature.layer_npc) standby[i].InitializeNpc();
             }
+
             if (i < party.Count)
             {
                 //位置
@@ -924,11 +938,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 }
                 else
                 {
-                    party[i].transform.ResetTransform().position = followingList[i - 1].position;
+                    party[i].transform.ResetTransform().position = followingTargets.GetComponentsInChildren<Transform>()[i].position;
                 }
                 //すでにセットアップされていた場合はスキップ
-                if (party[i].layer is ICreature.layer_player) continue;
-                party[i].InitializePokkur();
+                if (party[i].layer is not ICreature.layer_player) party[i].InitializePokkur();
             }
         }
         Time.timeScale = 1;
@@ -1003,7 +1016,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             pokkur.GetComponentInChildren<TextMeshProUGUI>().text = data.party[i].name;
             var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
             parameter.Power = data.party[i].power;
-            parameter.MaxHealthPoint = data.party[i].maxHealthPoint;
+            //parameter.MaxHealthPoint = data.party[i].maxHealthPoint;
             parameter.HealthPoint = data.party[i].healthPoint;
             parameter.MovementSpeed = data.party[i].movementSpeed;
             parameter.Dexterity = data.party[i].dexterity;
@@ -1067,7 +1080,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,
-                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.MaxHealthPoint, parameter.HealthPoint, parameter.MovementSpeed,
+                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
 
             data.party.Add(serializable);

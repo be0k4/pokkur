@@ -28,9 +28,8 @@ public static class Extensions
     }
 
     /// <summary>
-    /// 親子関係・位置・回転・スケールなどtransformを初期化する。チェーン可能
+    /// 親子関係・位置・回転・スケールなどtransformを初期化する。
     /// </summary>
-    /// <param name="transform"></param>
     /// <returns>初期化されたtransform</returns>
     public static Transform ResetTransform(this Transform transform)
     {

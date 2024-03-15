@@ -7,15 +7,13 @@ using UnityEngine.AddressableAssets;
 /// <summary>
 /// 敵の制御関連
 /// </summary>
-public class EnemyController : AbstractController
+public class EnemyController : AbstractController, IDataPersistence
 {
     [Header("移動関連")]
-    //移動範囲
-    [SerializeField] float walkRange;
+    [SerializeField, Tooltip("移動範囲")] float walkRange;
     //初期位置の周りをうろつくようにする
     Vector3 basePosition;
-    //移動のクールダウン、最小最大
-    [SerializeField] float moveCooldown, randomRangeMin, randomRangeMax;
+    [SerializeField, Tooltip("移動のクールダウンとクールダウンの最小最大")] float moveCooldown, randomRangeMin, randomRangeMax;
 
     //Dead()はDestroyまでの遅延があるので二度呼び出されないようにするためのフラグ
     bool isDead;
@@ -27,6 +25,10 @@ public class EnemyController : AbstractController
     [Header("AI関連")]
     [SerializeField] Plan plan = null;
     [SerializeField, Tooltip("行動決定時の評価対象となるプランを格納するリスト")] List<Plan> planList;
+
+    [Header("セーブ関連")]
+    [SerializeField, Tooltip("リポップ管理に使うID。GenerateGuidで生成")] string id;
+    bool isKilled;
 
     void Start()
     {
@@ -202,10 +204,11 @@ public class EnemyController : AbstractController
 
                 case Goal.Eat:
 
-                    //食事場にいない場合は、一旦そこまで移動する
+                    //食事場から離れている場合は、一旦そこまで移動する
                     if (OverDistance(plan.goalObject.position, ICreature.stoppingDistance))
                     {
                         SetNavigationCorners(plan.goalObject.position);
+                        animator.SetBool(ICreature.eatFlag, false);
                         creatureState = State.Move;
                     }
                     //食事場に近い場合は食事をする
@@ -260,7 +263,9 @@ public class EnemyController : AbstractController
 
         //一度だけ呼び出されるようにする
         isDead = true;
-
+        //リポップ管理
+        isKilled = true;
+        
         //死亡時エフェクトを読み込んでインスタンス化
         var handle = deathEffect.LoadAssetAsync<GameObject>();
         var prefab = await handle.Task;
@@ -291,7 +296,7 @@ public class EnemyController : AbstractController
             //通過点に到着したので、通過点を消す
             navigationCorners.RemoveAt(0);
 
-            if (navigationCorners.Count is 0 && this.plan.goal is not Goal.Battle)
+            if (navigationCorners.Count is 0 && creatureState != State.Battle)
             {
                 CreatureState = State.Idle;
                 //行動が完了したらプランを初期化
@@ -383,6 +388,30 @@ public class EnemyController : AbstractController
         if (bestPlan.goal is Goal.Sleep) GetComponentInChildren<SphereCollider>().radius = 1.5f;
 
         return bestPlan;
+    }
+
+    [ContextMenu("Generate guid for id")]
+    public void GenerateGuid()
+    {
+        id = System.Guid.NewGuid().ToString();
+    }
+
+    public void LoadData(SaveData data)
+    {
+        //idが空のものは無限沸きする
+        if (string.IsNullOrEmpty(id)) return;
+
+        data.repopChecker.TryGetValue(id, out isKilled);
+        if (isKilled) this.gameObject.SetActive(false);
+    }
+
+    public void SaveData(SaveData data)
+    {
+        //idが空のものは無限沸きする
+        if (string.IsNullOrEmpty(id)) return;
+
+        if (data.repopChecker.ContainsKey(id)) data.repopChecker.Remove(id);
+        data.repopChecker.Add(id, isKilled);
     }
 }
 

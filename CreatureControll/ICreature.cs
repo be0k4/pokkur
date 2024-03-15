@@ -20,9 +20,8 @@ public interface ICreature
     //攻撃の間隔
     const float attackCooldown = 6.0f;
     //パーティの制限
-    const int partyLimit = 4;
-    //キャラクターが死んだかUIで監視するフラグ
-    static bool isDead = false;
+    const int partyLimit = 3;
+    const int standbyLimit = 6;
     //ユニーク武器の識別
     const string uniqueWeapon = "unique";
 
@@ -105,8 +104,14 @@ public enum Species
     Pokkur,
     WolfPokkur,
     Kobold,
-    BetaSaurus,
-    Monsieur
+    βSaurus,
+    αSaurus,
+    Monsieur,
+    ChickenLeg,
+    Turtle,
+    Liquid,
+    GiantPokkur,
+    HeroPokkur
 }
 
 

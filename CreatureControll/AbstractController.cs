@@ -195,6 +195,7 @@ public abstract class AbstractController : MonoBehaviour, ICreature
             //通過点に到着したので、通過点を消す
             navigationCorners.RemoveAt(0);
 
+            //目的地についたらステートを初期化。バトル中はそのまま
             if (navigationCorners.Count is 0 && creatureState is not State.Battle)
             {
                 CreatureState = State.Idle;

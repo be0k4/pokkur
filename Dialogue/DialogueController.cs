@@ -99,12 +99,18 @@ public class DialogueController : AbstractInteractable, IDataPersistence
 
     public virtual void LoadData(SaveData data)
     {
+        //idが空のものは無限沸きする
+        if (string.IsNullOrEmpty(id)) return;
+
         data.repopChecker.TryGetValue(id, out isRecruited);
         if (isRecruited) this.gameObject.SetActive(false);
     }
 
     public virtual void SaveData(SaveData data)
     {
+        //idが空のものは無限沸きする
+        if (string.IsNullOrEmpty(id)) return;
+
         if (data.repopChecker.ContainsKey(id)) data.repopChecker.Remove(id);
         data.repopChecker.Add(id, isRecruited);
     }

@@ -73,6 +73,7 @@ public class AttackCalculater : MonoBehaviour
         }
         enemyBattleManager.GiveAsExp += creatureStatus.AddAsExp;
 
+        Debug.Log(methodName);
         other.SendMessage(methodName, CalculateAttackDamage());
     }
 }

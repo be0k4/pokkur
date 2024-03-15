@@ -17,7 +17,5 @@ MonoBehaviour:
   prefab: {fileID: 8291609921023137510, guid: bfed7f9479be02e459e420cb319bac18, type: 3}
   itemText: 'Wood Sword
 
-    Damage 5
-
-    Made of wood.'
+    Damage 5'
   address: woodSword.prefab

@@ -46,15 +46,7 @@ public class CreatureStatus : MonoBehaviour
         var dic = new Dictionary<float, int>();
         for (var i = 1; i <= 100; i++)
         {
-            //40までは一定割合
-            if(i < 40)
-            {
-                dic.Add(i, i * 100);
-            }
-            else
-            {
-                dic.Add(i, i * i * 5);
-            }
+            dic.Add(i, i * 100);
         }
         return dic;
 
@@ -90,19 +82,19 @@ public class CreatureStatus : MonoBehaviour
     ///攻撃アニメーション再生時true、攻撃用コライダ無効・被弾アニメーション時falseにする。
     /// </summary>
     public bool IsAttaking { get => isAttaking; set => isAttaking = value; }
-    public float StaggerThreshold { get => staggerThreshold;}
+    public float StaggerThreshold { get => staggerThreshold; }
     public Resistance SlashResist { get => slashResist; set => slashResist = value; }
     public Resistance StabResist { get => stabResist; set => stabResist = value; }
     public Resistance StrikeResist { get => strikeResist; set => strikeResist = value; }
-    public bool CanGuard { get => canGuard;}
-    public Sprite Icon { get => icon;}
+    public bool CanGuard { get => canGuard; }
+    public Sprite Icon { get => icon; }
     public int MaxEnemy { get => maxEnemy; set => maxEnemy = value; }
     public float PowExp { get => powExp; set => powExp = value; }
     public float DexExp { get => dexExp; set => dexExp = value; }
     public float ToExp { get => toExp; set => toExp = value; }
     public float AsExp { get => asExp; set => asExp = value; }
     public float DefExp { get => defExp; set => defExp = value; }
-    public string Address { get => address;}
+    public string Address { get => address; }
     public List<Skill> Skills { get => skills; set => skills = value; }
 
     /// <summary>
@@ -110,8 +102,9 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddPowExp(float enemyToughness)
     {
-        //最低でも100の経験値。敵が強くなるほどもらえる経験値は大きくなる
-        var exp = Mathf.Max(200, Mathf.Pow(enemyToughness, 2) - power) * 0.5f;
+        //敵とのステータス差に応じてもらえる経験は多くなる。ステータス差が10以下では基本値の100しかもらえない。
+        //2乗するので、差分がマイナスの場合は基本値とする。
+        var exp = enemyToughness - power > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - power, 2), 100) : 100;
 
         if (this.skills.Contains(Skill.Machomen))
         {
@@ -133,7 +126,7 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddDexExp(float enemyToughness)
     {
-        var exp = Mathf.Max(200, Mathf.Pow(enemyToughness, 2) - dexterity) * 0.5f;
+        var exp = enemyToughness - dexterity > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - dexterity, 2), 100) : 100;
 
         if (this.skills.Contains(Skill.Master))
         {
@@ -155,7 +148,7 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddToExp(float damage)
     {
-        var exp = Mathf.Max(200, Mathf.Pow(damage, 2) - toughness) * 0.5f;
+        var exp = damage - toughness > 0 ? Mathf.Max(Mathf.Pow(damage - toughness, 2), 100) : 100;
 
         if (this.skills.Contains(Skill.Toughguy))
         {
@@ -175,10 +168,9 @@ public class CreatureStatus : MonoBehaviour
     /// <summary>
     /// 攻撃対象の被ダメージ計算時に呼び出され、経験値を得る。
     /// </summary>
-    public void AddAsExp()
+    public void AddAsExp(float enemyAttackSpeed)
     {
-        //アタックスピードが一定以上で経験値が増える
-        var exp = this.attackSpeed > 40 ? Mathf.Pow(50, 2) * 0.4f : 100;
+        var exp = enemyAttackSpeed - attackSpeed > 0 ? Mathf.Max(Mathf.Pow(enemyAttackSpeed - attackSpeed, 2), 100) : 100;
 
         if (this.skills.Contains(Skill.Speedster))
         {
@@ -201,13 +193,7 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddDefExp(float damage)
     {
-        /*
-        *  式　 100 * Mathf.Max(1, 敵の攻撃力 - 自分の防御) * 0.1f
-        *  説明 敵の攻撃力が自分の防御を10上回ると1.0倍。自分より低いステータスの敵と戦った場合でも10の経験値
-        */
-
-        //var exp = 100 * Mathf.Max(1, damage - guard) * 0.1f;
-        var exp = Mathf.Max(200, Mathf.Pow(damage, 2) - guard) * 0.5f;
+        var exp = damage - guard > 0 ? Mathf.Max(Mathf.Pow(damage - guard, 2), 100) : 100;
 
         if (this.skills.Contains(Skill.Pacifist))
         {
@@ -232,7 +218,7 @@ public class CreatureStatus : MonoBehaviour
         var pool = (Skill[])Enum.GetValues(typeof(Skill));
         var list = new HashSet<Skill>();
         //固定スキルの追加
-        foreach(Skill skill in this.skills)
+        foreach (Skill skill in this.skills)
         {
             list.Add(skill);
         }
@@ -249,7 +235,7 @@ public class CreatureStatus : MonoBehaviour
 
         this.skills = list.ToList();
     }
-    
+
 }
 
 //耐性

@@ -102,11 +102,10 @@ public class DataPersistenceManager : MonoBehaviour
         var newData = new SaveData();
 
         //必要に応じて初期設定としてデータを追加する
-        newData.inventory.Add("herb.prefab");
-        var skills = new List<Skill>() { Skill.Speedster };
-        float maxHealthPoint = 100;
-        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, Resistance.Normal, Resistance.Normal, Resistance.Normal, skills, maxHealthPoint, healthPoint:maxHealthPoint, 5, 0, 0, 0, 0, 0,
-            "pokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
+        newData.inventory.Add("Herb.prefab");
+        var skills = new List<Skill>() { };
+        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, Resistance.Normal, Resistance.Normal, Resistance.Normal, skills, healthPoint:120, movementSpeed: 5, 0, 0, 0, 0, 0,
+            "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
         newData.party.Add(pokkur);
 
         this.gameData = newData;

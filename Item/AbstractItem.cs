@@ -47,12 +47,18 @@ public abstract class AbstractItem : MonoBehaviour, ICollectable
 
     public void LoadData(SaveData data)
     {
+        //id‚ª‹ó‚Ì‚à‚Ì‚Í–³ŒÀ•¦‚«‚·‚é
+        if (string.IsNullOrEmpty(id)) return;
+
         data.repopChecker.TryGetValue(id, out isCorrected);
         if (isCorrected) this.gameObject.SetActive(false);
     }
 
     public void SaveData(SaveData data)
     {
+        //id‚ª‹ó‚Ì‚à‚Ì‚Í–³ŒÀ•¦‚«‚·‚é
+        if (string.IsNullOrEmpty(id)) return;
+
         if (data.repopChecker.ContainsKey(id)) data.repopChecker.Remove(id);
         data.repopChecker.Add(id, isCorrected);
     }

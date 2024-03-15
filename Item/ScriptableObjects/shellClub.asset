@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
-  m_Name: woodSpear
+  m_Name: shellClub
   m_EditorClassIdentifier: 
-  data: 5
-  icon: {fileID: 21300000, guid: 9fadab219f108ec498b7fea4ffe06781, type: 3}
-  prefab: {fileID: 4211049706788997695, guid: 9b716aeed18269c48ab0f41160cd7eef, type: 3}
-  itemText: 'Wood Spear
+  data: 20
+  icon: {fileID: 21300000, guid: 13f91b48007f9da4ab4241120154b50c, type: 3}
+  prefab: {fileID: 4757903107210663834, guid: 5cf3edb4f19387044a405a80dc4f3f80, type: 3}
+  itemText: 'Shell Club
 
-    Damage 5'
-  address: woodSpear.prefab
+    Damage 20'
+  address: shellClub.prefab

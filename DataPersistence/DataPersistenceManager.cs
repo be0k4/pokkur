@@ -104,9 +104,16 @@ public class DataPersistenceManager : MonoBehaviour
         //必要に応じて初期設定としてデータを追加する
         newData.inventory.Add("Herb.prefab");
         var skills = new List<Skill>() { };
-        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, Resistance.Normal, Resistance.Normal, Resistance.Normal, skills, healthPoint:120, movementSpeed: 5, 0, 0, 0, 0, 0,
+
+        var pokkur = new SerializablePokkur("a", 10, 10, 10, 10, 10, skills, healthPoint:120, movementSpeed: 5, 0, 0, 0, 0, 0,
             "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
+        var pokkur1 = new SerializablePokkur("a", 10, 10, 10, 10, 10, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
+    "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(72, 0, 23));
+        var pokkur3 = new SerializablePokkur("a", 10, 10, 10, 10, 10, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
+    "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(68, 0, 23));
         newData.party.Add(pokkur);
+        newData.party.Add(pokkur1);
+        newData.party.Add(pokkur3);
 
         this.gameData = newData;
     }
@@ -203,5 +210,34 @@ public class DataPersistenceManager : MonoBehaviour
     public Dictionary<string, SaveData> GetAllProfileData()
     {
         return dataHandler.LoadAllProfileData();
+    }
+
+    /// <summary>
+    /// セーブデータからスタンバイに空きがあるか調べる
+    /// </summary>
+    /// <returns>空きがある場合にtrueを返す</returns>
+    public bool CheckStandbyAvailability()
+    {
+        return gameData.standby.Count < ICreature.standbyLimit;
+    }
+
+    /// <summary>
+    /// ポックルをデータオブジェクトへ追加する
+    /// </summary>
+    public void SendToStandbyData(GameObject pokkur)
+    {
+        //シリアライズ化
+        var serializedName = name;
+        var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
+        var weapon = pokkur.GetComponentInChildren<Weapon>();
+        var weaponAddress = weapon.GetItemData().address;
+        var weaponSlotPath = weapon.transform.parent.GetFullPath();
+        var index = weaponSlotPath.IndexOf('ア');
+        weaponSlotPath = weaponSlotPath.Remove(0, index);
+
+        var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+            parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position);
+
+        gameData.standby.Add(serializable);
     }
 }

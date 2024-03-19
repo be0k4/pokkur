@@ -50,6 +50,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] GameObject followingTargets;
     //パーティ管理を行うリスト
     List<GameObject> party = new();
+    //パーティとスタンバイの管理を行うオブジェクト
+    [SerializeField] DialogueControllerForVeteran partymanager;
 
     [Header("インベントリ関連")]
     [SerializeField] RectTransform inventoryWindow;
@@ -447,8 +449,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// パーティメンバー加入・死亡時に行われる更新。
-    /// <para>パーティアイコンウィンドウの更新と、追従関連のフラグ処理、アクティブカメラ/キャラの更新、ステータスウィンドウの更新</para>
+    /// パーティメンバー加入・死亡時にパーティ関連の更新を行う。
+    /// <para>アイコン、追従関連のフラグ処理、アクティブカメラ・キャラ、ステータスウィンドウの更新</para>
     /// </summary>
     private void UpdateParty()
     {
@@ -547,7 +549,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// インベントリ表示、非表示
+    /// インベントリ表示、非表示、アイテムや装備の反映
     /// </summary>
     private void Inventory()
     {
@@ -631,9 +633,14 @@ public class GameManager : MonoBehaviour, IDataPersistence
             for (var i = 0; i < equipmentFrames.Count(); i++)
             {
                 //対象の武器を削除
-                Weapon existingWeapon = party[equipmentFrames[i].Index].GetComponentInChildren<Weapon>();
+                var target = party[equipmentFrames[i].Index];
+                Weapon existingWeapon = target.GetComponentInChildren<Weapon>();
                 Transform weaponSlotParent = existingWeapon.transform.parent.parent;
                 Destroy(existingWeapon.gameObject);
+
+                //現在のアニメーションを中断させる
+                if (target.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.name.Contains("attack", StringComparison.OrdinalIgnoreCase))
+                    target.GetComponent<Animator>().SetTrigger(ICreature.cancelTrigger);
 
                 //対象に新しい武器を生成
                 GameObject newWeapon = Instantiate(equipmentFrames[i].Item.GetItemData().prefab);
@@ -753,15 +760,38 @@ public class GameManager : MonoBehaviour, IDataPersistence
     }
 
     /// <summary>
-    /// 引数のポックルを仲間に加える。
+    /// 引数で渡されたポックルを仲間に加える。
+    /// パーティが一杯の場合はスタンバイへ送られる
     /// </summary>
     /// <param name="pokkur">仲間になるポックル</param>
-    /// <returns>ヒントを表示するか。成功した場合false、失敗した場合true。</returns>
+    /// <returns>ヒントを表示するか。成功した場合true、失敗した場合false。</returns>
     public async UniTask<bool> Recruit(GameObject pokkur, CancellationToken token)
     {
-        //パーティがいっぱいなら処理を中断してヒントを表示するようtrueを返す
-        if (party.Count >= ICreature.partyLimit) return true;
+        //加入先を決めるためのフラグ
+        bool toParty = true;
+        bool toPartymanager = true;
 
+        //パーティとスタンバイの人数を調べ、リクルート可能か決める
+        //パーティの人数
+        if (party.Count >= ICreature.partyLimit)
+        {
+            toParty = false;
+
+            //スタンバイの人数
+            if(partymanager is null)
+            {
+                toPartymanager = false;
+
+                //そのシーンにベテランポックル(パーティ編成を行うオブジェクト)がいない場合はセーブデータを調べる
+                if (DataPersistenceManager.instance.CheckStandbyAvailability() is false) return false;
+            }
+            else
+            {
+                if (partymanager.CheckStandbyAvailability() is false) return false;
+            }
+        }
+
+        //リクルート成功
         //InputFieldを表示し、入力が完了するまで待つ
         Time.timeScale = 0;
         inputNameWindow.gameObject.SetActive(true);
@@ -774,11 +804,28 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //入力内容を名前として設定、Inputfieldを消す
         inputNameWindow.gameObject.SetActive(false);
         pokkur.GetComponentInChildren<TextMeshProUGUI>().text = name;
-        //OnTriggerが作動しないように完全に消す。消すことでNPCからプレイアブルキャラになる
+        //OnTriggerが作動しないようにSetActive(false)ではなく完全に消す。消すことでDialogueController内のOnDisable()でプレイアブルキャラになる
         Destroy(pokkur.GetComponent<DialogueController>());
         //スキルの抽選
         pokkur.GetComponentInChildren<CreatureStatus>().SetRandomSkills();
-        party.Add(pokkur);
+
+        //どこに加入させるかで分岐する
+        if (toParty)
+        {
+            party.Add(pokkur);
+        }
+        else
+        {
+            if (toPartymanager)
+            {
+                partymanager.SendToStandby(pokkur);
+            }
+            else
+            {
+                DataPersistenceManager.instance.SendToStandbyData(pokkur);
+                pokkur.SetActive(false);
+            }
+        }
 
         //暗転
         BlackOut();
@@ -788,7 +835,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         UpdateParty();
         Time.timeScale = 1;
-        return false;
+        return true;
     }
 
     /// <summary>
@@ -826,13 +873,22 @@ public class GameManager : MonoBehaviour, IDataPersistence
             {
                 partyIcons[i].Pokkur = party[i];
                 partyIcons[i].GetComponentInChildren<TextMeshProUGUI>().text = partyIcons[i].Pokkur.GetComponentInChildren<TextMeshProUGUI>().text;
-                partyIcons[i].GetComponent<Image>().raycastTarget = true;
+                var images = partyIcons[i].GetComponentsInChildren<Image>();
+                //アイコンをドラッグ可能にする
+                images[0].raycastTarget = true;
+                //ポートレートを設定
+                images[1].color = new Color32(255, 255, 255, 255);
+                images[1].sprite = party[i].GetComponentInChildren<CreatureStatus>().Icon;
             }
             else
             {
                 partyIcons[i].Pokkur = null;
                 partyIcons[i].GetComponentInChildren<TextMeshProUGUI>().text = null;
-                partyIcons[i].GetComponent<Image>().raycastTarget = false;
+                var images = partyIcons[i].GetComponentsInChildren<Image>();
+                //アイコンをドラッグ不能にする
+                images[0].raycastTarget = false;
+                //ポートレートを設定
+                images[1].color = new Color32(255, 255, 255, 0);
             }
         }
 
@@ -842,13 +898,22 @@ public class GameManager : MonoBehaviour, IDataPersistence
             {
                 standbyIcons[i].Pokkur = standby[i];
                 standbyIcons[i].GetComponentInChildren<TextMeshProUGUI>().text = standbyIcons[i].Pokkur.GetComponentInChildren<TextMeshProUGUI>().text;
-                standbyIcons[i].GetComponent<Image>().raycastTarget = true;
+                var images = standbyIcons[i].GetComponentsInChildren<Image>();
+                //アイコンをドラッグ可能にする
+                images[0].raycastTarget = true;
+                //ポートレートを設定
+                images[1].color = new Color32(255, 255, 255, 255);
+                images[1].sprite = standby[i].GetComponentInChildren<CreatureStatus>().Icon;
             }
             else
             {
                 standbyIcons[i].Pokkur = null;
                 standbyIcons[i].GetComponentInChildren<TextMeshProUGUI>().text = null;
-                standbyIcons[i].GetComponent<Image>().raycastTarget = false;
+                var images = standbyIcons[i].GetComponentsInChildren<Image>();
+                //アイコンをドラッグ不能にする
+                images[0].raycastTarget = false;
+                //ポートレートを設定
+                images[1].color = new Color32(255, 255, 255, 0);
             }
         }
 
@@ -1023,9 +1088,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
             parameter.Toughness = data.party[i].toughness;
             parameter.AttackSpeed = data.party[i].attackSpeed;
             parameter.Guard = data.party[i].guard;
-            parameter.SlashResist = data.party[i].slashResist;
-            parameter.StabResist = data.party[i].stabResist;
-            parameter.StrikeResist = data.party[i].strikeResist;
             parameter.Skills = data.party[i].skills;
             parameter.PowExp = data.party[i].powExp;
             parameter.DexExp = data.party[i].dexExp;
@@ -1079,8 +1141,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
             var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
 
-            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,
-                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,　parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
 
             data.party.Add(serializable);

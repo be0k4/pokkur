@@ -31,6 +31,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
     }
 
     //パーティ加入時にdialogueControllerはオフになる
+    //ダイアログコントローラーをオフにしたとき、勝手にプレイアブルとして初期化される
     protected void OnDisable()
     {
         //会話用コライダとヒントテキストを消す
@@ -68,9 +69,9 @@ public class DialogueController : AbstractInteractable, IDataPersistence
                     break;
                 case FunctionalFlag.Recruitable when functionalFlag.GetFlag() is true:
 
-                    var showHint = await gameManager.Recruit(this.gameObject, token);
+                    var success = await gameManager.Recruit(this.gameObject, token);
 
-                    if (showHint)
+                    if (success is false)
                     {
                         hintText.text = "LIMIT OVER!";
                         hintText.color = Color.yellow;

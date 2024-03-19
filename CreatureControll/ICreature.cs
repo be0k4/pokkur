@@ -53,6 +53,7 @@ public interface ICreature
     const string spearTrigger = "spearTrigger";
     const string hitActionTrigger = "hitActionTrigger";
     const string gestureTrigger = "gestureTrigger";
+    const string cancelTrigger = "cancelTrigger";
 
     const string attackSpeed = "attackSpeed";
 

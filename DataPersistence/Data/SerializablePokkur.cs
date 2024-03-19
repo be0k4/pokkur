@@ -3,13 +3,13 @@ using UnityEngine;
 
 /// <summary>
 /// シリアライズ可能なポックル
+/// 個体差のあるものに関してのみ保存する。
 /// </summary>
 [System.Serializable]
 public class SerializablePokkur
 {
     //ステータス
     public string name;
-    public float maxHealthPoint;
     public float healthPoint;
     public float movementSpeed;
     public float power;
@@ -17,9 +17,6 @@ public class SerializablePokkur
     public float toughness;
     public float attackSpeed;
     public float guard;
-    public Resistance slashResist;
-    public Resistance stabResist;
-    public Resistance strikeResist;
     public List<Skill> skills;
 
     //経験値
@@ -37,8 +34,7 @@ public class SerializablePokkur
     public string weaponSlotPath;
     public Vector3 position;
 
-    public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, 
-        Resistance slashResist, Resistance stabResist, Resistance strikeResist, List<Skill> skills, float healthPoint, float movementSpeed,
+    public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, List<Skill> skills, float healthPoint, float movementSpeed,
         float powExp, float dexExp, float toExp, float asExp, float defExp, string pokkurAddress, string weaponAddress, string weaponSlotPath, Vector3 position)
     {
         //ステータス
@@ -48,11 +44,7 @@ public class SerializablePokkur
         this.toughness = toughness;
         this.attackSpeed = attackSpeed;
         this.guard = guard;
-        this.slashResist = slashResist;
-        this.stabResist = stabResist;
-        this.strikeResist = strikeResist;
         this.skills = skills;
-        //this.maxHealthPoint = maxHealthPoint;
         this.healthPoint = healthPoint;
         this.movementSpeed = movementSpeed;
 

@@ -8,7 +8,7 @@ using UnityEngine.Playables;
 /// 長老ポックル
 /// <para>説明系のダイアログと、オーブの管理</para>
 /// </summary>
-public class UniqueDialogueControllerForElder : DialogueController
+public class DialogueControllerForElder : DialogueController
 {
     [SerializeField] List<Orb> collectedOrbs;
     [SerializeField] PlayableDirector happyEnd;

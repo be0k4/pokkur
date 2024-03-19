@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -8,12 +9,12 @@ using UnityEngine.AddressableAssets;
 /// <para>ベテランポックル専用</para>
 /// スタンバイを保持し、パーティ管理を行う
 /// </summary>
-public class UniqueDialogueControllerForVeteran : DialogueController
+public class DialogueControllerForVeteran : DialogueController
 {
     [SerializeField, Tooltip("専用会話テキスト")] TextAsset[] textFiles;
 
     [Header("スタンバイ関連")]
-    public List<GameObject> standby = new();
+    List<GameObject> standby = new();
     [SerializeField, Tooltip("スタンバイを配置するための空オブジェクト")] List<Transform> standbyPositionList;
 
     private async UniTask Update()
@@ -69,7 +70,8 @@ public class UniqueDialogueControllerForVeteran : DialogueController
             var prefab = await handle.Task;
             var pokkur = Instantiate(prefab, standbyPositionList[i]);
             pokkur.transform.ResetLocaTransform();
-            if (!string.IsNullOrEmpty(serialized.weaponAddress))
+            //ユニークウェポン以外
+            if (serialized.weaponAddress is not ICreature.uniqueWeapon)
             {
                 handle = Addressables.LoadAssetAsync<GameObject>(serialized.weaponAddress);
                 var weaponPrefab = await handle.Task;
@@ -92,9 +94,6 @@ public class UniqueDialogueControllerForVeteran : DialogueController
             parameter.Toughness = serialized.toughness;
             parameter.AttackSpeed = serialized.attackSpeed;
             parameter.Guard = serialized.guard;
-            parameter.SlashResist = serialized.slashResist;
-            parameter.StabResist = serialized.stabResist;
-            parameter.StrikeResist = serialized.strikeResist;
             parameter.Skills = serialized.skills;
             parameter.PowExp = serialized.powExp;
             parameter.DexExp = serialized.dexExp;
@@ -108,7 +107,7 @@ public class UniqueDialogueControllerForVeteran : DialogueController
 
     public override void SaveData(SaveData data)
     {
-        //スタンバイをセーブして保存
+        //スタンバイをセーブデータに追加
         data.standby.Clear();
         foreach (var pokkur in standby)
         {
@@ -121,11 +120,31 @@ public class UniqueDialogueControllerForVeteran : DialogueController
             var index = weaponSlotPath.IndexOf('ア');
             weaponSlotPath = weaponSlotPath.Remove(0, index);
 
-            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,
-                parameter.SlashResist, parameter.StabResist, parameter.StrikeResist, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position);
 
             data.standby.Add(serializable);
         }
+    }
+
+    /// <summary>
+    /// スタンバイに空きがあるか調べる
+    /// </summary>
+    /// <returns>空きがある場合にtrueを返す</returns>
+    public bool CheckStandbyAvailability()
+    {
+        return this.standby.Count < ICreature.standbyLimit;
+    }
+
+    /// <summary>
+    /// スタンバイにポックルを送る
+    /// </summary>
+    public void SendToStandby(GameObject pokkur)
+    {
+        this.standby.Add(pokkur);
+        pokkur.transform.SetParent(standbyPositionList.First(e => e.childCount is 0));
+        pokkur.transform.ResetLocaTransform();
+        //すでにセットアップされていた場合はスキップ
+        if (pokkur.layer is not ICreature.layer_npc) pokkur.InitializeNpc();
     }
 }

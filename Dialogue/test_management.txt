@@ -1,4 +1,0 @@
-this is test for party Management.
-<branch>Manage party members./Bye./Management
-<true>I'll retrain the kids. Gahaha!
-<false>Be strong and stay strong.

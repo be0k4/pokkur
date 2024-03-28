@@ -1,3 +1,0 @@
-this is test for reruitable.
-<branch>yes/no/recruitable
-Bye!

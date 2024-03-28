@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public class BadEndPlayableBehaviour : PlayableBehaviour
 {
     public PostProcessVolume postProcessing;
-    ColorGrading colorGrading;
+    public UnityEngine.Camera mainCamera;
 
     // Called when the owning graph starts playing
     public override async void OnGraphStart(Playable playable)
@@ -17,6 +17,8 @@ public class BadEndPlayableBehaviour : PlayableBehaviour
         await BGMAudioManager.instance.SwapTrack(null);
         //‘€ì‚Å‚«‚È‚­‚·‚é
         GameManager.invalid = true;
+        //UI‚ğ”ñ•\¦
+        mainCamera.cullingMask &= ~(1 << 5);
     }
 
     // Called when the owning graph stops playing

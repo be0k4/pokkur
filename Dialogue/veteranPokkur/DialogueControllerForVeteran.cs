@@ -17,51 +17,36 @@ public class DialogueControllerForVeteran : DialogueController
     List<GameObject> standby = new();
     [SerializeField, Tooltip("スタンバイを配置するための空オブジェクト")] List<Transform> standbyPositionList;
 
-    private async UniTask Update()
+    public override async void Interact()
     {
         if (GameManager.invalid) return;
+        if (interactable is false) return;
+        if (CheckPartyIsReady() is false) return;
 
-        localUI.transform.rotation = Camera.main.transform.rotation;
+        var branch = await gameManager.Dialogue(textFile, token);
 
-        //会話開始
-        if (interactable && Input.GetKeyDown(KeyCode.T))
+        switch (branch)
         {
-            if (gameManager.CheckPartyIsReady(this.gameObject.transform) is false)
-            {
-                hintText.text = "GATHER PARTY!";
-                hintText.color = Color.yellow;
-                return;
-            }
+            //パーティ管理
+            case 0:
+                await gameManager.ManageParty(standby, standbyPositionList, token);
+                break;
+            //ランダムな会話をひとつする
+            case 1:
+                await gameManager.Dialogue(textFiles[Random.Range(0, textFiles.Length)], token);
+                break;
+            default:
+                break;
 
-            var functionalFlag = await gameManager.Dialogue(textFile, token);
-
-            //関数フラグの値に応じて処理を実行
-            switch (functionalFlag)
-            {
-                case FunctionalFlag.None:
-                    break;
-                //パーティ管理
-                case FunctionalFlag.Management when functionalFlag.GetFlag() is true:
-                    await gameManager.ManageParty(standby, standbyPositionList, token);
-                    await gameManager.Dialogue(textFiles[0], token);
-                    break;
-                case FunctionalFlag.Management when functionalFlag.GetFlag() is false:
-                    await gameManager.Dialogue(textFiles[0], token);
-                    break;
-
-            }
-
-            //関数フラグを初期化
-            functionalFlag.SetFlag(null);
-            //会話後モーション
-            this.gameObject.GetComponent<Animator>().SetTrigger(ICreature.gestureTrigger);
         }
+        //会話後モーション
+        this.gameObject.GetComponent<Animator>().SetTrigger(ICreature.gestureTrigger);
     }
 
     public async override void LoadData(SaveData data)
     {
         //スタンバイをロードして配置
-        for(var i = 0; i < data.standby.Count; i++)
+        for (var i = 0; i < data.standby.Count; i++)
         {
             var serialized = data.standby[i];
             //スタンバイを復元する

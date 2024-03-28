@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 16
   icon: {fileID: 21300000, guid: 1dfcdda5088a26c4bbb29dbdd4a9a238, type: 3}
   prefab: {fileID: 8117744025803992017, guid: 1e7b8013b1909a043929e52bd01d327d, type: 3}
-  itemText: 'Posion Dagger
-
-    Damage 16'
+  itemText: "\u6BD2\u306E\u30C0\u30AC\u30FC\n\u30C0\u30E1\u30FC\u30B8 16"
   address: poisonDagger.prefab

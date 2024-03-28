@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 5
   icon: {fileID: 21300000, guid: 9fadab219f108ec498b7fea4ffe06781, type: 3}
   prefab: {fileID: 4211049706788997695, guid: 9b716aeed18269c48ab0f41160cd7eef, type: 3}
-  itemText: 'Wood Spear
-
-    Damage 5'
+  itemText: "\u6728\u306E\u69CD\n\u30C0\u30E1\u30FC\u30B8 5"
   address: woodSpear.prefab

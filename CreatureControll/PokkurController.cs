@@ -29,7 +29,9 @@ public class PokkurController : AbstractController
         await UniTask.WaitWhile(() => GameManager.invalid);
         //パラメータの取得
         movementSpeed = creatureStatus.MovementSpeed;
-        attackSpeed = creatureStatus.AttackSpeed * 0.01f;
+        this.attackSpeed = creatureStatus.AttackSpeed * 0.01f;
+        //スキルがある場合、攻撃速度に30％ボーナス
+        if (creatureStatus.Skills.Contains(Skill.Attacker)) this.attackSpeed = attackSpeed + 0.3f;
         attackCooldown = ICreature.attackCooldown * (1.0f - (0.5f * attackSpeed));
         maxEnemy = creatureStatus.MaxEnemy;
     }

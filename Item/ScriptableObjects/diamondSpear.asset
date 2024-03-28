@@ -15,7 +15,6 @@ MonoBehaviour:
   data: 26
   icon: {fileID: 21300000, guid: 0e2274c1f30935f4894bdef996168909, type: 3}
   prefab: {fileID: 8343611289593476035, guid: f301135ce15b3ab4b885cb2e1add34e7, type: 3}
-  itemText: 'Diaond Spear
-
-    Damage 26'
+  itemText: "\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9\u306E\u69CD\n\u30C0\u30E1\u30FC\u30B8
+    26"
   address: diamondSpear.prefab

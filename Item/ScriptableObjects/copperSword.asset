@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 10
   icon: {fileID: 21300000, guid: ad1e5ee45f06e5449b79d42a5b1fc28c, type: 3}
   prefab: {fileID: 5176605026164577192, guid: b59104f2d4870634cb946bd829dd63e4, type: 3}
-  itemText: 'Copper Sword
-
-    Damage 10'
+  itemText: "\u9285\u306E\u5263\n\u30C0\u30E1\u30FC\u30B8 10"
   address: copperSword.prefab

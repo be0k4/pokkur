@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,21 +10,11 @@ public class SavePoint : AbstractInteractable
     [SerializeField] InGameMenu inGameMenu;
     [SerializeField] Button activateSaveSlotsButton;
 
-    void Update()
+    public override void Interact()
     {
-        localUI.transform.rotation = Camera.main.transform.rotation;
-
-        if (interactable && Input.GetKeyDown(KeyCode.T))
-        {
-            if (!gameManager.CheckPartyIsReady(this.gameObject.transform))
-            {
-                hintText.text = "GATHER PARTY!";
-                hintText.color = Color.yellow;
-                return;
-            }
-
-            Rest();
-        }
+        if (interactable is false) return;
+        if (CheckPartyIsReady() is false) return;
+        Rest();
     }
 
     protected override void OnTriggerEnter(Collider other)

@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 0
   icon: {fileID: 21300000, guid: 5922cbe4c7f79e74e96baec846942d67, type: 3}
   prefab: {fileID: 0}
-  itemText: 'Red orb
-
-    Let''s take it to the elder.'
+  itemText: "\u30EC\u30C3\u30C9\u30AA\u30FC\u30D6\n\u9577\u8001\u306E\u3068\u3053\u308D\u3078\u6301\u3063\u3066\u3044\u3053\u3046\uFF01"
   address: RedOrb.prefab

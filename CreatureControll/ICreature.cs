@@ -102,17 +102,17 @@ public enum State
 //種族
 public enum Species
 {
-    Pokkur,
-    WolfPokkur,
-    Kobold,
-    βSaurus,
-    αSaurus,
-    Monsieur,
-    ChickenLeg,
-    Turtle,
-    Liquid,
-    GiantPokkur,
-    HeroPokkur
+    ポックル,
+    ウルフポックル,
+    コボルド,
+    βサウルス,
+    αサウルス,
+    ムッシュ,
+    チキンレッグ,
+    カメ,
+    リキッド,
+    ヘビーポックル,
+    ヒーローポックル
 }
 
 

@@ -15,10 +15,5 @@ MonoBehaviour:
   data: 5
   icon: {fileID: 21300000, guid: b7faf4277eb76154a99f8a4e4aef1008, type: 3}
   prefab: {fileID: 1067628604122825863, guid: 27e1f0a52ef75d94c9688fb278b24876, type: 3}
-  itemText: 'Wood Club
-
-    Damage 5
-
-
-'
+  itemText: "\u6728\u306E\u68CD\u68D2\n\u30C0\u30E1\u30FC\u30B8 5\n\n"
   address: woodClub.prefab

@@ -24,26 +24,17 @@ public class DungeonGate : AbstractInteractable
         token = this.GetCancellationTokenOnDestroy();
     }
 
-    async void Update()
+
+    public override async void Interact()
     {
-        localUI.transform.rotation = Camera.main.transform.rotation;
+        if (interactable is false) return;
+        if (CheckPartyIsReady() is false) return;
 
-        if(interactable && Input.GetKeyDown(KeyCode.T))
-        {
-            if (gameManager.CheckPartyIsReady(this.gameObject.transform) is false)
-            {
-                hintText.text = "GATHER PARTY!";
-                hintText.color = Color.yellow;
-                return;
-            }
+        var value = await gameManager.ConfirmWindow(token);
 
-            var value = await gameManager.ConfirmWindow(token);
+        if (value is 1) return;
 
-            if (value is 1) return;
-
-            IntoGate(this.inOutDungeon);
-        }
-
+        IntoGate(this.inOutDungeon);
     }
 
     /// <summary>
@@ -54,7 +45,7 @@ public class DungeonGate : AbstractInteractable
     {
         DataPersistenceManager.instance.SaveGame();
         //注意！ダンジョン内か外かでセーブの処理が切り替わるため、セーブの後に切り替える。
-        if(inOutDungeon) GameManager.isInDungeon = !GameManager.isInDungeon;
+        if (inOutDungeon) GameManager.isInDungeon = !GameManager.isInDungeon;
         SceneManager.LoadSceneAsync(this.sceneName);
     }
 }
@@ -70,12 +61,12 @@ public class CustomInspectorDungeonGate : Editor
     int index;
     //一度だけ処理を呼び出すためのフラグ
     bool isCalled;
-public override void OnInspectorGUI()
+    public override void OnInspectorGUI()
     {
-        if(isCalled is false)
+        if (isCalled is false)
         {
             //シーン名を一括取得
-            List<string>optionList = new();
+            List<string> optionList = new();
 
             foreach (var fullPath in EditorBuildSettings.scenes.Select(e => e.path))
             {

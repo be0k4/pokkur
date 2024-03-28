@@ -20,7 +20,7 @@ public class EnemyController : AbstractController, IDataPersistence
 
     [Header("アイテムドロップ")]
     [SerializeField] AssetReferenceT<GameObject> item;
-    [SerializeField] int dropRate;
+    [SerializeField, Range(0, 100)] int dropRate;
 
     [Header("AI関連")]
     [SerializeField] Plan plan = null;
@@ -142,7 +142,7 @@ public class EnemyController : AbstractController, IDataPersistence
         //初期位置の周辺でランダムな地点を返す
         Vector3 GetRandomPoint()
         {
-            Vector2 randomPoint = UnityEngine.Random.insideUnitCircle * walkRange;
+            Vector2 randomPoint = Random.insideUnitCircle * walkRange;
             Vector3 destination = basePosition + new Vector3(randomPoint.x, 0, randomPoint.y);
             return destination;
         }
@@ -273,7 +273,7 @@ public class EnemyController : AbstractController, IDataPersistence
         Addressables.Release(handle);
 
         //dropRate%で死亡時にアイテムを読み込んでインスタンス化
-        if (Random.Range(1, 101) <= dropRate)
+        if (dropRate >= Random.Range(1, 101))
         {
             handle = item.LoadAssetAsync<GameObject>();
             prefab = await handle.Task;

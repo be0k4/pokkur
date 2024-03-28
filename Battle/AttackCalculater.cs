@@ -41,7 +41,12 @@ public class AttackCalculater : MonoBehaviour
     /// </summary>
     public float CalculateAttackDamage()
     {
-        return ((creatureStatus.Power * 0.5f) + (creatureStatus.Dexterity * 0.5f) + this.weaponDamage);
+        var damage = (creatureStatus.Power * 0.6f) + (creatureStatus.Dexterity * 0.4f) + this.weaponDamage;
+
+        //スキルがある場合のダメージ変動
+        if (creatureStatus.Skills.Contains(Skill.Berserker) && creatureStatus.HealthPoint <= creatureStatus.MaxHealthPoint / 2) damage += Skill.Berserker.GetValue();
+        if (creatureStatus.Skills.Contains(Skill.Attacker)) damage *= 0.8f;
+        return damage;
     }
 
     //WeaponレイヤーはPlayer/EnemyHitBoxと接触判定

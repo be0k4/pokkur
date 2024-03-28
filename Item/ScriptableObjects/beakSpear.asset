@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 26
   icon: {fileID: 21300000, guid: d9e8757e11eff014fb9b020b9ab19c22, type: 3}
   prefab: {fileID: 4434165248011055834, guid: 3e40694c45f70b346a1008e405a41cbb, type: 3}
-  itemText: 'Beak Spear
-
-    Damage 26'
+  itemText: "\u304F\u3061\u3070\u3057\u306E\u69CD\n\u30C0\u30E1\u30FC\u30B8 26"
   address: beakSpear.prefab

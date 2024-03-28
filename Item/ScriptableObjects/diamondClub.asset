@@ -15,7 +15,6 @@ MonoBehaviour:
   data: 26
   icon: {fileID: 21300000, guid: d7b6bfef16bdb194e809e34596a867b5, type: 3}
   prefab: {fileID: 2944214096668372638, guid: 45ec16b433245104ab39af3957bf2244, type: 3}
-  itemText: 'Diaond Club
-
-    Damage 26'
+  itemText: "\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9\u306E\u68CD\u68D2\n\u30C0\u30E1\u30FC\u30B8
+    26"
   address: diamondClub.prefab

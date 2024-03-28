@@ -49,49 +49,6 @@ public class DialogueController : AbstractInteractable, IDataPersistence
         }
     }
 
-    //会話イベントを制御
-    private async UniTask Update()
-    {
-        //二重に会話するのを防ぐ
-        if (GameManager.invalid) return;
-
-        localUI.transform.rotation = Camera.main.transform.rotation;
-
-        //会話開始
-        if (interactable && Input.GetKeyDown(KeyCode.T))
-        {
-            var functionalFlag = await gameManager.Dialogue(textFile, token);
-
-            //列挙型関数フラグに応じて処理を分け、またtrueかfalseかでも分けることができる
-            switch (functionalFlag)
-            {
-                case FunctionalFlag.None:
-                    break;
-                case FunctionalFlag.Recruitable when functionalFlag.GetFlag() is true:
-
-                    var success = await gameManager.Recruit(this.gameObject, token);
-
-                    if (success is false)
-                    {
-                        hintText.text = "LIMIT OVER!";
-                        hintText.color = Color.yellow;
-                    }
-                    else
-                    {
-                        //パーティ加入イベントが発生した場合はリポップしなくなる
-                        isRecruited = true;
-                    }
-                    break;
-                default:
-                    break;
-
-            }
-            //関数フラグを初期化
-            functionalFlag.SetFlag(null);
-        }
-
-    }
-
     [ContextMenu("Generate guid for id")]
     public void GenerateGuid()
     {
@@ -115,12 +72,34 @@ public class DialogueController : AbstractInteractable, IDataPersistence
         if (data.repopChecker.ContainsKey(id)) data.repopChecker.Remove(id);
         data.repopChecker.Add(id, isRecruited);
     }
-}
 
-//会話の分岐で参照する関数フラグ
-public enum FunctionalFlag
-{
-    None,//何もしない
-    Recruitable,//パーティへ勧誘
-    Management,//パーティ管理
+    public override async void Interact()
+    {
+        //二重に会話するのを防ぐ
+        if (GameManager.invalid) return;
+        //近くにいないと会話できない
+        if (interactable is false) return;
+
+        var branch = await gameManager.Dialogue(textFile, token);
+
+        switch (branch)
+        {
+            case 0:
+                var success = await gameManager.Recruit(this.gameObject, token);
+
+                if (success is false)
+                {
+                    hintText.text = "パーティもスタンバイもいっぱいです！";
+                    hintText.color = Color.yellow;
+                }
+                else
+                {
+                    //パーティ加入イベントが発生した場合はリポップしなくなる
+                    isRecruited = true;
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }

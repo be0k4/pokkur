@@ -92,7 +92,7 @@ public class BattleManager : MonoBehaviour
         //1~90%の確率
         var guard = Mathf.Clamp(mid / 100, 0.01f, 0.9f);
 
-        if (guard >= Mathf.Round(UnityEngine.Random.Range(0, 1.0f) * Mathf.Pow(10, 2)) / Mathf.Pow(10, 2))
+        if (guard >= UnityEngine.Random.Range(1, 101) * 0.01f)
         {
             //防御成功
             creatureStatus.IsGuarding = true;
@@ -120,15 +120,19 @@ public class BattleManager : MonoBehaviour
             return;
         }
         //ダメージは先に耐性を参照して計算し、その値に軽減率をかける
-        float damage = (slashDamage * creatureStatus.SlashResist.GetResist());
+        float damage = slashDamage * creatureStatus.SlashResist.GetResist();
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
         //ひるみ値の蓄積とアニメーション再生フラグのオン
-        staggerPoint += damage;
-        if (staggerPoint > creatureStatus.StaggerThreshold)
+        //スキルがある場合は怯み無効
+        if(creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
-            staggerPoint = 0;
-            creatureStatus.HitactionFlag = true;
+            staggerPoint += damage;
+            if (staggerPoint > creatureStatus.StaggerThreshold)
+            {
+                staggerPoint = 0;
+                creatureStatus.HitactionFlag = true;
+            }
         }
         UpdateBattleUI(damage, PhysicalDamage);
 
@@ -156,11 +160,14 @@ public class BattleManager : MonoBehaviour
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
         //ひるみ値の蓄積とアニメーション再生フラグのオン
-        staggerPoint += damage;
-        if (staggerPoint > creatureStatus.StaggerThreshold)
+        if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
-            staggerPoint = 0;
-            creatureStatus.HitactionFlag = true;
+            staggerPoint += damage;
+            if (staggerPoint > creatureStatus.StaggerThreshold)
+            {
+                staggerPoint = 0;
+                creatureStatus.HitactionFlag = true;
+            }
         }
         UpdateBattleUI(damage, PhysicalDamage);
 
@@ -187,11 +194,14 @@ public class BattleManager : MonoBehaviour
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
         //ひるみ値の蓄積とアニメーション再生フラグのオン
-        staggerPoint += damage;
-        if (staggerPoint > creatureStatus.StaggerThreshold)
+        if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
-            staggerPoint = 0;
-            creatureStatus.HitactionFlag = true;
+            staggerPoint += damage;
+            if (staggerPoint > creatureStatus.StaggerThreshold)
+            {
+                staggerPoint = 0;
+                creatureStatus.HitactionFlag = true;
+            }
         }
         UpdateBattleUI(damage, PhysicalDamage);
 
@@ -221,11 +231,14 @@ public class BattleManager : MonoBehaviour
         physicalDamage = physicalDamage - (physicalDamage * CalculateToughness());
         creatureStatus.HealthPoint -= physicalDamage;
         //ひるみ値の蓄積とアニメーション再生フラグのオン
-        staggerPoint += physicalDamage;
-        if (staggerPoint > creatureStatus.StaggerThreshold)
+        if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
-            staggerPoint = 0;
-            creatureStatus.HitactionFlag = true;
+            staggerPoint += physicalDamage;
+            if (staggerPoint > creatureStatus.StaggerThreshold)
+            {
+                staggerPoint = 0;
+                creatureStatus.HitactionFlag = true;
+            }
         }
         UpdateBattleUI(physicalDamage, PhysicalDamage);
 
@@ -234,7 +247,9 @@ public class BattleManager : MonoBehaviour
         GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
         GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
 
-        //毒ダメージは4秒かけて少しずつ与える
+        //毒無効
+        if (creatureStatus.Skills.Contains(Skill.Immunity)) return;
+        //毒ダメージは4秒かけて与える
         for (var i = 0; i < 4; i++)
         {
             await UniTask.Delay(1000);

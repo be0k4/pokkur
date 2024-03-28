@@ -97,35 +97,19 @@ public static class Extensions
         return resistDic[resistance];
     }
 
-    //イベントフラグ関連
-    //イベントの選択肢を選んだあと、実際にイベントが発生するかしないかまで区別する
-    public static Dictionary<FunctionalFlag, bool?> flagDic = new()
-    {
-        { FunctionalFlag.None, null },
-        { FunctionalFlag.Recruitable, null },
-        { FunctionalFlag.Management, null }
-    };
-
-    public static bool? GetFlag(this FunctionalFlag sorce)
-    {
-        return flagDic[sorce];
-    }
-
-    public static void SetFlag(this FunctionalFlag sorce, bool? flag)
-    {
-        flagDic[sorce] = flag;
-    }
-
     public static Dictionary<Skill, (string description, float value)> skillDic = new()
     {
         //経験値ボーナス系
         //スキル名、説明文、影響を与える数値
-        { Skill.Machomen, ("I love muscle training. Bonus to power exp.", 1.1f) },
-        { Skill.Master, ("I'm skilled. Bonus to dex exp.", 1.1f) },
-        { Skill.Toughguy, ("It's itchy! Bonus to Toughness exp.", 1.1f) },
-        { Skill.Speedster, ("Still not fast enough.. Bonus to attackSpeed exp.", 1.1f) },
-        { Skill.Pacifist, ("No more violence! Bonus to defence exp.", 1.1f) },
-
+        { Skill.Powerful, ("力に経験値のボーナス", 1.2f) },
+        { Skill.Skilled, ("技に経験値のボーナス", 1.2f) },
+        { Skill.Tough, ("頑丈に経験値のボーナス", 1.2f) },
+        { Skill.Agile, ("素早さに経験値のボーナス", 1.2f) },
+        { Skill.Barricade, ("防御に経験値のボーナス", 1.2f) },
+        { Skill.Strong, ("敵の攻撃によって怯まない", 0) },
+        { Skill.Attacker, ("ダメージが減少するが、攻撃速度が大幅に増加", 0) },
+        { Skill.Immunity, ("毒への耐性", 0) },
+        { Skill.Berserker, ("HPが半分以下の状態だとダメージが増加する", 6) }
     };
 
     public static string GetDescription(this Skill sorce)

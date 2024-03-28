@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 public class HappyEndPlayableBehaviour : PlayableBehaviour
 {
     public AudioClip endingClip;
+    public Camera mainCamera;
 
     // Called when the owning graph starts playing
     public override async void OnGraphStart(Playable playable)
@@ -15,6 +16,8 @@ public class HappyEndPlayableBehaviour : PlayableBehaviour
         //BGM‚ð’âŽ~
         await BGMAudioManager.instance.SwapTrack(null);
         GameManager.invalid = true;
+        //Ui‚ð”ñ•\Ž¦
+        mainCamera.cullingMask &= ~(1 << 5);
     }
 
     // Called when the owning graph stops playing

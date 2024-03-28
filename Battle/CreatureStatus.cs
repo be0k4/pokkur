@@ -30,6 +30,7 @@ public class CreatureStatus : MonoBehaviour
     [Header("味方専用項目")]
     [SerializeField, Tooltip("UI表示用アイコン")] Sprite icon;
     [SerializeField, Tooltip("~.prefabで続くprefabのアドレス 例）pokkur.prefab")] string address;
+    [SerializeField, Tooltip("スキルの数"), Range(1, 3)] int skillCount;
     [SerializeField, Tooltip("3つ以内でスキルを設定可能。余った枠はランダムに決定する")] List<Skill> skills = new();
 
     //経験値
@@ -106,9 +107,9 @@ public class CreatureStatus : MonoBehaviour
         //2乗するので、差分がマイナスの場合は基本値とする。
         var exp = enemyToughness - power > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - power, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Machomen))
+        if (this.skills.Contains(Skill.Powerful))
         {
-            exp = exp * Skill.Machomen.GetValue();
+            exp = exp * Skill.Powerful.GetValue();
         }
 
         powExp += exp;
@@ -128,9 +129,9 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = enemyToughness - dexterity > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - dexterity, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Master))
+        if (this.skills.Contains(Skill.Skilled))
         {
-            exp = exp * Skill.Master.GetValue();
+            exp = exp * Skill.Skilled.GetValue();
         }
 
         dexExp += exp;
@@ -150,9 +151,9 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = damage - toughness > 0 ? Mathf.Max(Mathf.Pow(damage - toughness, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Toughguy))
+        if (this.skills.Contains(Skill.Tough))
         {
-            exp = exp * Skill.Toughguy.GetValue();
+            exp = exp * Skill.Tough.GetValue();
         }
 
         toExp += exp;
@@ -172,9 +173,9 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = enemyAttackSpeed - attackSpeed > 0 ? Mathf.Max(Mathf.Pow(enemyAttackSpeed - attackSpeed, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Speedster))
+        if (this.skills.Contains(Skill.Agile))
         {
-            exp = exp * Skill.Speedster.GetValue();
+            exp = exp * Skill.Agile.GetValue();
         }
 
         asExp += exp;
@@ -193,11 +194,12 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddDefExp(float damage)
     {
-        var exp = damage - guard > 0 ? Mathf.Max(Mathf.Pow(damage - guard, 2), 100) : 100;
+        //ガードとダメージの差分で経験値が決まるので、低確率の防御を成功するほど経験値が多い。また、技量が多いと経験値が多くなりがち。
+        var exp = damage * 2 - guard > 0 ? Mathf.Max(Mathf.Pow(damage - guard, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Pacifist))
+        if (this.skills.Contains(Skill.Barricade))
         {
-            exp = exp * Skill.Pacifist.GetValue();
+            exp = exp * Skill.Barricade.GetValue();
         }
 
         defExp += exp;
@@ -211,7 +213,7 @@ public class CreatureStatus : MonoBehaviour
     }
 
     /// <summary>
-    /// 重複を許さず、余ったスキルの枠にをランダムにスキルを追加する。
+    /// 重複を許さず、余ったスキルの枠にランダムにスキルを追加する。
     /// </summary>
     public void SetRandomSkills()
     {
@@ -224,10 +226,10 @@ public class CreatureStatus : MonoBehaviour
         }
 
         //最大3回抽選する
-        for (var i = 0; i < 3 - this.skills.Count; i++)
+        for (var i = 0; i < skillCount - this.skills.Count; i++)
         {
 
-            //プールの中ででランダムなインデックスを取得
+            //プールの中でランダムなインデックスを取得
             var index = UnityEngine.Random.Range(0, pool.Length);
             //重複した場合は何も入らない
             list.Add(pool[index]);
@@ -248,14 +250,16 @@ public enum Resistance
 }
 
 //スキル
-//追加時にExtension出の追加も忘れずに
+//追加時にExtensionでの追加も忘れずに
 public enum Skill
 {
-    Machomen,
-    Master,
-    Toughguy,
-    Speedster,
-    Pacifist,
-    //CatPuncher 攻撃早いけど、攻撃力にペナルティ
-    //Coward　防御は得意だけど攻撃にペナルティ
+    Powerful,
+    Skilled,
+    Tough,
+    Agile,
+    Barricade,
+    Strong,
+    Attacker,
+    Immunity,
+    Berserker
 }

@@ -15,7 +15,5 @@ MonoBehaviour:
   data: 30
   icon: {fileID: 21300000, guid: 5081b991dcfbc574c8417bcf61cc3c6f, type: 3}
   prefab: {fileID: 0}
-  itemText: 'Fist
-
-    Damage 30'
+  itemText: "\u62F3\n\u30C0\u30E1\u30FC\u30B8 30"
   address: unique

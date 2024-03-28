@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -17,10 +18,16 @@ public abstract class AbstractInteractable : MonoBehaviour
     {
         gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
     }
+
+    protected void Update()
+    {
+        localUI.transform.rotation = Camera.main.transform.rotation;
+    }
+
     protected virtual void OnTriggerEnter(Collider other)
     {
         hintText.enabled = true;
-        hintText.text = "T : INTERACT";
+        hintText.text = "右クリック:インタラクト";
     }
     protected virtual void OnTriggerStay(Collider other)
     {
@@ -31,5 +38,22 @@ public abstract class AbstractInteractable : MonoBehaviour
         interactable = false;
         hintText.enabled = false;
         hintText.color = Color.white;
+    }
+
+    public abstract void Interact();
+
+    /// <summary>
+    /// パーティが準備できているかチェックし、準備できている場合trueを返す
+    /// </summary>
+    protected bool CheckPartyIsReady()
+    {
+        if (gameManager.CheckPartyIsReady(this.transform) is false)
+        {
+            hintText.text = "パーティを集めてください";
+            hintText.color = Color.yellow;
+            return false;
+        }
+
+        return true;
     }
 }

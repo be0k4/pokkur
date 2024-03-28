@@ -60,6 +60,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] RectTransform equipmentWindow;
 
     [Header("UI")]
+    //フォント
+    [SerializeField, Tooltip("ダイナミックフォントのアセットアドレス")] AssetReferenceT<TMP_FontAsset> dynamicFont;
     //ステータスウィンドウ
     [SerializeField] RectTransform statusWindow;
     //Expバー
@@ -117,8 +119,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //ゲームオーバーとなる日数
     public const int gameOver = 14;
 
-    //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム
-    int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14;
+    //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム 15:npc
+    int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14 | 1 << 15;
 
     public List<GameObject> Party { get => party; }
 
@@ -152,6 +154,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 Debug.LogError($"存在しないステートです{weatherState}");
                 break;
         }
+        //乱数の初期化
+        Random.InitState(DateTime.Now.Second);
         //ロードを待機
         await UniTask.WaitWhile(() => invalid);
 
@@ -331,6 +335,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 //移動命令
                 case ICreature.layer_item:
                 case ICreature.layer_ground:
+                case ICreature.layer_npc:
                     if (Vector3.Distance(activeObject.transform.position, destination) > ICreature.stoppingDistance)//停止距離の外側
                     {
                         PokkurController activeController = activeObject.GetComponent<PokkurController>();
@@ -377,13 +382,15 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //Rayの当たり先はキャラクターコントローラーでなくHitBoxのコライダを想定(メッシュに合わせてサイズを変更しやすい)
         if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, layerMask))
         {
-            //NPCを除外したいのでルートオブジェクトのレイヤーで判断
             GameObject hitObject = hitInfo.collider.transform.root.gameObject;
             switch (hitObject.layer)
             {
                 case ICreature.layer_player:
                 case ICreature.layer_enemy:
                     UpdateStatusWindow(hitObject);
+                    break;
+                case ICreature.layer_npc:
+                    hitObject.GetComponent<AbstractInteractable>().Interact();
                     break;
                 default:
                     return;
@@ -431,7 +438,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         //パラメータの更新
         int attackDmg = Mathf.RoundToInt(target.GetComponentInChildren<AttackCalculater>().CalculateAttackDamage());
-        parameterText.text = $"{status.Species}\n{status.Power}(DMG{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}";
+        parameterText.text = $"{status.Species}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}";
 
         //スキルとスキル説明の更新
         for (int i = 0; i < this.skills.Length; i++)
@@ -638,9 +645,12 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 Transform weaponSlotParent = existingWeapon.transform.parent.parent;
                 Destroy(existingWeapon.gameObject);
 
-                //現在のアニメーションを中断させる
+                //攻撃のアニメーションを中断させる
                 if (target.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.name.Contains("attack", StringComparison.OrdinalIgnoreCase))
+                {
                     target.GetComponent<Animator>().SetTrigger(ICreature.cancelTrigger);
+                    target.GetComponent<PokkurController>().InactiveAttackCollider();
+                }
 
                 //対象に新しい武器を生成
                 GameObject newWeapon = Instantiate(equipmentFrames[i].Item.GetItemData().prefab);
@@ -680,10 +690,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// ダイアログを流す。選択によって分岐を行う事も可能。
     /// </summary>
     /// <param name="textFile">会話テキスト</param>
-    /// <returns>分岐を含む会話後に発生するイベントの列挙型フラグ。これはテキストファイルで指定する。</returns>
-    public async UniTask<FunctionalFlag> Dialogue(TextAsset textFile, CancellationToken token)
+    /// <returns>0、1、2のいずれかを返す。それ以外は選択肢が無い場合</returns>
+    public async UniTask<int> Dialogue(TextAsset textFile, CancellationToken token)
     {
-        FunctionalFlag functionalFlag = default;
+        //戻り値は分岐が無い場合もあるので適当な値を入れておく
+        int value = 100;
         //一時停止
         Time.timeScale = 0;
         dialogueWindow.gameObject.SetActive(true);
@@ -698,41 +709,40 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             if (dialogueTexts[i].Contains("<branch>"))
             {
-                //<branch>を取り除き、/で区切る「ブランチA文章/ブランチB文章/フラグ名」
-                var branchInfo = dialogueTexts[i].Replace("<branch>", "").Split('/');
+                //<branch>を取り除き、/で区切る「<branch>ブランチA文章/ブランチB文章」
+                //選択肢は3つか2つ
+                var branchTexts = dialogueTexts[i].Replace("<branch>", "").Split('/');
 
-                //関数フラグの一覧から、名前の一致するものを取得(大文字小文字は区別しない)
-                var functionalFlags = (FunctionalFlag[])Enum.GetValues(typeof(FunctionalFlag));
-                functionalFlag = functionalFlags.First(e => Enum.GetName(typeof(FunctionalFlag), e).Equals(branchInfo[^1], StringComparison.OrdinalIgnoreCase));
                 //会話を中断し選択肢(Button)を表示
                 textUI.text = "";
                 var branches = dialogueWindow.GetComponentsInChildren<Button>(true).ToList();
+                //選択肢(button)は最大3つ
                 for (var ii = 0; ii < branches.Count; ii++)
                 {
-                    branches[ii].GetComponentInChildren<TextMeshProUGUI>().text = branchInfo[ii];
-                    branches[ii].gameObject.SetActive(true);
-                    //クリック時の処理を追加
-                    //重複防止
-                    branches[ii].onClick.RemoveAllListeners();
-                    branches[ii].onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
-
-                    //ボタンの押下で関数フラグにboolを渡す
-                    if (ii is 0)
+                    if (ii < branchTexts.Length)
                     {
-                        branches[ii].onClick.AddListener(() => functionalFlag.SetFlag(true));
+                        branches[ii].GetComponentInChildren<TextMeshProUGUI>().text = branchTexts[ii];
+                        branches[ii].gameObject.SetActive(true);
+                        //クリック時の処理を追加
+                        //重複防止
+                        branches[ii].onClick.RemoveAllListeners();
+                        branches[ii].onClick.AddListener(() => SEAudioManager.instance.PlaySE(SEAudioManager.instance.click));
                     }
+                    //選択肢が無い場合
                     else
                     {
-                        branches[ii].onClick.AddListener(() => functionalFlag.SetFlag(false));
+                        branches[ii].gameObject.SetActive(false);
                     }
                 }
                 //選択肢が押されるまで待機(ボタンが押されるまでフラグはnull)
-                await UniTask.WhenAny(branches[0].OnClickAsync(), branches[1].OnClickAsync());
-                //フラグの内容次第で分岐以外を削除
-                dialogueTexts.RemoveAll(e => e.StartsWith($"<{!functionalFlag.GetFlag()}>", StringComparison.OrdinalIgnoreCase));
+                value = await UniTask.WhenAny(branches[0].OnClickAsync(), branches[1].OnClickAsync(), branches[2].OnClickAsync());
+                //分岐先以外の文章を削除
+                dialogueTexts.RemoveAll(e => e.StartsWith($"<{value}>") is false);
+                //インデックス番号を最初に戻してあげる
+                i = -1;
                 //選択肢を非表示
                 branches.ForEach(e => e.gameObject.SetActive(false));
-                //テキスト送りをスキップ
+                //テキスト送りをスキップ、i = 0へ(分岐の最初の文章へ)
                 continue;
             }
 
@@ -756,7 +766,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         Time.timeScale = 1;
         dialogueWindow.gameObject.SetActive(false);
         invalid = false;
-        return functionalFlag;
+        return value;
     }
 
     /// <summary>
@@ -778,7 +788,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             toParty = false;
 
             //スタンバイの人数
-            if(partymanager is null)
+            if (partymanager is null)
             {
                 toPartymanager = false;
 
@@ -892,7 +902,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             }
         }
 
-        for(var i = 0; i < standbyIcons.Length; i++)
+        for (var i = 0; i < standbyIcons.Length; i++)
         {
             if (i < standby.Count())
             {
@@ -1022,12 +1032,19 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //ロード開始
         invalid = true;
 
+        //フォント
+        var op = dynamicFont.LoadAssetAsync<TMP_FontAsset>();
+        var font = await op.Task;
+        //フォントアトラスを空にする
+        font.ClearFontAssetData();
+        Addressables.Release(op);
+        //環境
         this.inGameHours = data.inGameHours;
         this.inGamedays = data.inGamedays;
-        //ダンジョン外ならデータからとってくる
         this.weatherState = isInDungeon ? Weather.Dungeon : data.weatherState;
 
-        //インベントリはアイテムクラスからアクセスするコストを考えてstaticにしたので、中身をここでリセットする
+        //インベントリ
+        //staticなので、中身が残ってるので消す
         inventory.Clear();
         foreach (var address in data.inventory)
         {
@@ -1039,7 +1056,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             Addressables.Release(handle);
         }
 
-        //ダンジョン内の場合はnull以外が設定される
+        //ダンジョン内の開始位置
         List<Vector3> startPositions = null;
         if (isInDungeon)
         {
@@ -1048,10 +1065,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
             startPositions.RemoveAt(0);
         }
 
-
+        //パーティ
         for (var i = 0; i < data.party.Count; i++)
         {
-            //パーティを復元する
             //prefabのインスタンス化
             var handle = Addressables.LoadAssetAsync<GameObject>(data.party[i].pokkurAddress);
             var prefab = await handle.Task;
@@ -1141,7 +1157,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
             var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
 
-            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard,　parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
 
             data.party.Add(serializable);

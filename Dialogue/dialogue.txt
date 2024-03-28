@@ -1,6 +1,0 @@
-this is test for None.
-<branch>yes/no/None
-<false>this is false.
-<false>2nd text for false.
-<true>this is true.
-Bye!

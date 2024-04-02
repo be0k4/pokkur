@@ -36,12 +36,23 @@ public class AttackCalculater : MonoBehaviour
 
     /// <summary>
     /// 攻撃時の計算
-    /// <para>dmg =(力 + (熟練度 * 0.7) + 武器攻撃力) * 0.5</para>
-    /// <para>武器攻撃力が30の場合、最大ステータスで100ダメージ</para>
     /// </summary>
     public float CalculateAttackDamage()
     {
-        var damage = (creatureStatus.Power * 0.6f) + (creatureStatus.Dexterity * 0.4f) + this.weaponDamage;
+        float damage = 0;
+        switch (attackType)
+        {
+            //力を成長させる場合は力依存が高い
+            case ICreature.slash:
+            case ICreature.strike:
+                damage = (creatureStatus.Power * 0.8f) + (creatureStatus.Dexterity * 0.2f) + this.weaponDamage;
+                break;
+            //技を成長させる場合は技依存が高いが、技は防御にも関係するステータスなので、反映率は力優遇
+            case ICreature.stab:
+            case ICreature.poison:
+                damage = (creatureStatus.Power * 0.4f) + (creatureStatus.Dexterity * 0.6f) + this.weaponDamage;
+                break;
+        }
 
         //スキルがある場合のダメージ変動
         if (creatureStatus.Skills.Contains(Skill.Berserker) && creatureStatus.HealthPoint <= creatureStatus.MaxHealthPoint / 2) damage += Skill.Berserker.GetValue();

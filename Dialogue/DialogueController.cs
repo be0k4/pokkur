@@ -42,10 +42,8 @@ public class DialogueController : AbstractInteractable, IDataPersistence
         {
             this.gameObject.InitializePokkur();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Debug.Log($"例外{e.StackTrace}");
-            return;
         }
     }
 

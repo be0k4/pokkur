@@ -22,7 +22,6 @@ public class Weapon : MonoBehaviour, ICollectable
     {
         var clone = (Weapon)this.MemberwiseClone();
         if (GameManager.inventory.Count < GameManager.inventorySize) GameManager.inventory.Add(clone);
-        Debug.Log("collect");
         Destroy(gameObject);
         isCorrected = true;
     }

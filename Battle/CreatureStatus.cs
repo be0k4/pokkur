@@ -194,8 +194,8 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddDefExp(float damage)
     {
-        //ガードとダメージの差分で経験値が決まるので、低確率の防御を成功するほど経験値が多い。また、技量が多いと経験値が多くなりがち。
-        var exp = damage * 2 - guard > 0 ? Mathf.Max(Mathf.Pow(damage - guard, 2), 100) : 100;
+        //防御は成長機会が限られるうえに、敵の攻撃力が上がるほど成功しないので多めに与える
+        var exp = Mathf.Pow(damage, 2);
 
         if (this.skills.Contains(Skill.Barricade))
         {

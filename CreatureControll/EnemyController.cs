@@ -81,13 +81,13 @@ public class EnemyController : AbstractController, IDataPersistence
                     //ポックルが逃げたら追うのをやめる
                     else if (OverDistance(attackTarget.transform.position, ICreature.trackingDistance))
                     {
-                        Debug.Log("逃げられた！");
-
                         //敵が死んだことにする
                         var list = enemySlots.ToList();
                         list[0] = null;
                         Queue<GameObject> queue = new(list);
                         enemySlots = queue;
+                        //時々歩行アニメーションが止まらないのでここで完全に止める
+                        velocity = Vector3.zero;
                     }
                     else
                     {
@@ -317,7 +317,6 @@ public class EnemyController : AbstractController, IDataPersistence
             //行動が完了したらプランを初期化
             this.plan = new Plan(Goal.Battle);
             this.creatureState = State.Idle;
-            Debug.Log("Battleプランへ移行");
         }
         else
         {
@@ -329,10 +328,18 @@ public class EnemyController : AbstractController, IDataPersistence
     //プランの初期化を追加
     public override void UpdateAttackTarget()
     {
-        if (CheckEnemyDead())
+        //死んでいる敵がいるか調べ、いた場合は削除
+        var list = enemySlots.ToList();
+        var count = list.RemoveAll((e) => e == null);
+        if(count > 0)
         {
+            Queue<GameObject> queue = new(list);
+            this.enemySlots = queue;
+            //有効エネミーカウントを減らす
+            availableEnemyCount -= count;
+
             //戦闘終了
-            if (enemySlots.Count == 0)
+            if (this.enemySlots.Count == 0)
             {
                 enemySlots.Enqueue(null);
                 isBattling = false;
@@ -347,20 +354,6 @@ public class EnemyController : AbstractController, IDataPersistence
         {
             attackTarget = enemySlots.Peek();
             isBattling = false;
-        }
-
-        bool CheckEnemyDead()
-        {
-            //死んでいる敵がいるか調べ、いた場合は削除
-            var list = enemySlots.ToList();
-            var count = list.RemoveAll((e) => e == null);
-            Queue<GameObject> queue = new(list);
-            this.enemySlots = queue;
-
-            //有効エネミーカウントを減らす
-            availableEnemyCount -= count;
-
-            return count > 0;
         }
     }
 

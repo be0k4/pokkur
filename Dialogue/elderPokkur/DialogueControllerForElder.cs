@@ -67,7 +67,13 @@ public class DialogueControllerForElder : DialogueController
             //通常
             else
             {
-                var dialogue = new TextAsset($"これはまさしく{type}オーブじゃ! よく集めてきてくれた。\r\nこれで残りのオーブはあと{count}つじゃ。\r\nいいか、わしが生きているのもあとわずかじゃ。くれぐれも忘れんようにな。");
+                string text = $"これはまさしく{type}オーブじゃ! よく集めてきてくれた。\r\nこれで残りのオーブはあと{count}つじゃ。\r\nいいか、わしが生きているのもあとわずかじゃ。くれぐれも忘れんようにな。";
+                if(count is 2)
+                {
+                    text += "\r\n残りもあとふたつ..。そろそろ話してもよいころかの。実はヒーローマスクには先代がいたんじゃ。\r\nヒーローマスクというのは最も才能ある、選ばれしポックルの証なんじゃ。\r\nその昔、やつとわしは一緒に旅をしていての。そこにいる軍曹と三人で無敵のパーティじゃった。" +
+                        "\r\nじゃが、何の願いを叶えるか口論になってしまい、結局愛想をつかされてしまったんじゃ。惜しい友人を無くした、今でも後悔しておるわい。\r\nおお、すまんすまん。湿っぽくて悪かったのぉ。年寄りの悪い癖じゃ。お前さんたちには期待しておるよ。";
+                }
+                TextAsset dialogue = new(text);
                 await gameManager.Dialogue(dialogue, token);
                 //対応するオーブを取得済みにする
                 gameManager.BlackOut();

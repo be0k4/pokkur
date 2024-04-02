@@ -128,7 +128,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     {
         //ロード中に暗転アニメーションを流す
         BlackOut();
-        //天候の初期化とBGmの再生
+        //乱数の初期化
+        Random.InitState(DateTime.Now.Second);
+        //ロードを待機
+        await UniTask.WaitWhile(() => invalid);
+        //天候の初期化とBGMの再生
         switch (weatherState)
         {
             case Weather.Dungeon:
@@ -154,10 +158,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 Debug.LogError($"存在しないステートです{weatherState}");
                 break;
         }
-        //乱数の初期化
-        Random.InitState(DateTime.Now.Second);
-        //ロードを待機
-        await UniTask.WaitWhile(() => invalid);
 
         expBars = statusWindow.GetComponentsInChildren<Slider>().ToList().ToDictionary(e => e.name);
         SetDayText();
@@ -438,7 +438,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         //パラメータの更新
         int attackDmg = Mathf.RoundToInt(target.GetComponentInChildren<AttackCalculater>().CalculateAttackDamage());
-        parameterText.text = $"{status.Species}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}";
+        parameterText.text = $"{status.Species}\n{status.MaxHealthPoint}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}\n{status.SlashResist}\n{status.StabResist}\n{status.StrikeResist}";
 
         //スキルとスキル説明の更新
         for (int i = 0; i < this.skills.Length; i++)
@@ -812,8 +812,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
         await UniTask.WaitWhile(() => name is null, PlayerLoopTiming.Update, token);
 
         //入力内容を名前として設定、Inputfieldを消す
-        inputNameWindow.gameObject.SetActive(false);
         pokkur.GetComponentInChildren<TextMeshProUGUI>().text = name;
+        inputNameWindow.GetComponent<TMP_InputField>().text = "";
+        inputNameWindow.gameObject.SetActive(false);
         //OnTriggerが作動しないようにSetActive(false)ではなく完全に消す。消すことでDialogueController内のOnDisable()でプレイアブルキャラになる
         Destroy(pokkur.GetComponent<DialogueController>());
         //スキルの抽選
@@ -1152,10 +1153,23 @@ public class GameManager : MonoBehaviour, IDataPersistence
             weaponSlotPath = weaponSlotPath.Remove(0, index);
 
             //ダンジョン内と外で保存する地点が異なる
-            //内：入口でいた地点
-            //外：現在地
-            //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
-            var position = isInDungeon ? savedPositions?[i] ?? savedPositions[i - 1] : party[i].transform.position;
+            Vector3 position;
+            if (isInDungeon)
+            {
+                try
+                {
+                    position = savedPositions[i];
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
+                    position = savedPositions[i - 1];
+                }
+            }
+            else
+            {
+                position = party[i].transform.position;
+            }
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);

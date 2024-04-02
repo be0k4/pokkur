@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -106,7 +107,7 @@ public class DataPersistenceManager : MonoBehaviour
         newData.inventory.Add("Herb.prefab");
         var skills = new List<Skill>() { };
 
-        var pokkur = new SerializablePokkur("ヒーロー", 1, 1, 1, 1, 10, skills, healthPoint: 100, movementSpeed: 5, 0, 0, 0, 0, 0,
+        var pokkur = new SerializablePokkur("マスク", 1, 1, 1, 1, 10, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
             "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
         newData.party.Add(pokkur);
 
@@ -155,7 +156,6 @@ public class DataPersistenceManager : MonoBehaviour
     /// </summary>
     public void SaveGame()
     {
-        Debug.Log("saved!");
         if (this.gameData is null)
         {
             Debug.LogWarning("データがありません。ニューゲームで始める必要があります");
@@ -222,7 +222,7 @@ public class DataPersistenceManager : MonoBehaviour
     public void SendToStandbyData(GameObject pokkur)
     {
         //シリアライズ化
-        var serializedName = name;
+        var name = pokkur.GetComponentInChildren<TextMeshProUGUI>().text;
         var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
         var weapon = pokkur.GetComponentInChildren<Weapon>();
         var weaponAddress = weapon.GetItemData().address;

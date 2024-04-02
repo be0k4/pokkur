@@ -14,7 +14,6 @@ public class Orb : MonoBehaviour, ICollectable
     {
         var clone = (Orb)this.MemberwiseClone();
         if (GameManager.inventory.Count < GameManager.inventorySize) GameManager.inventory.Add(clone);
-        Debug.Log("collect");
         Destroy(gameObject);
         isCorrected = true;
     }

@@ -119,13 +119,24 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp?.GetInvocationList()[0];
             return;
         }
+        //HPが0以下になるとDestroyされるので、先に経験値の処理
+        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
+        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
+
         //ダメージは先に耐性を参照して計算し、その値に軽減率をかける
         float damage = slashDamage * creatureStatus.SlashResist.GetResist();
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
+        UpdateBattleUI(damage, PhysicalDamage);
+
+        //死んだ場合はdestroyされるので処理中断
+        if (creatureStatus.HealthPoint <= 0) return;
+
         //ひるみ値の蓄積とアニメーション再生フラグのオン
         //スキルがある場合は怯み無効
-        if(creatureStatus.Skills.Contains(Skill.Strong) is false)
+        if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
             staggerPoint += damage;
             if (staggerPoint > creatureStatus.StaggerThreshold)
@@ -134,13 +145,6 @@ public class BattleManager : MonoBehaviour
                 creatureStatus.HitactionFlag = true;
             }
         }
-        UpdateBattleUI(damage, PhysicalDamage);
-
-        //経験値を与えるデリゲート関連の処理
-        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
-        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
-        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
-        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -155,10 +159,20 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp?.GetInvocationList()[0];
             return;
         }
+        ////HPが0以下になるとDestroyされるので、先に経験値の処理
+        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
+        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
 
         float damage = (stabDamage * creatureStatus.StabResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
+        UpdateBattleUI(damage, PhysicalDamage);
+
+        //死んだ場合はdestroyされるので処理中断
+        if (creatureStatus.HealthPoint <= 0) return;
+
         //ひるみ値の蓄積とアニメーション再生フラグのオン
         if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
@@ -169,12 +183,6 @@ public class BattleManager : MonoBehaviour
                 creatureStatus.HitactionFlag = true;
             }
         }
-        UpdateBattleUI(damage, PhysicalDamage);
-
-        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
-        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
-        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
-        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -190,9 +198,20 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
+        ////HPが0以下になるとDestroyされるので、先に経験値の処理
+        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
+        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
+
         float damage = (strikeDamage * creatureStatus.StrikeResist.GetResist());
         damage = damage - (damage * CalculateToughness());
         creatureStatus.HealthPoint -= damage;
+        UpdateBattleUI(damage, PhysicalDamage);
+
+        //死んだ場合はdestroyされるので処理中断
+        if (creatureStatus.HealthPoint <= 0) return;
+
         //ひるみ値の蓄積とアニメーション再生フラグのオン
         if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
@@ -203,13 +222,6 @@ public class BattleManager : MonoBehaviour
                 creatureStatus.HitactionFlag = true;
             }
         }
-        UpdateBattleUI(damage, PhysicalDamage);
-
-        //経験値を与えるデリゲート関連の処理
-        GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
-        GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
-        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
-        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
     }
 
     /// <summary>
@@ -224,12 +236,23 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
         }
 
+        //HPが0以下になるとDestroyされるので、先に経験値の処理
+        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
+        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
+        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
+        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
+
         //ダメージの一部を毒にする
         var poison = poisonDamage * 0.3f;
-        //物理ダメージは普通に適用
+        //物理ダメージを先に適用
         var physicalDamage = poisonDamage - poison;
         physicalDamage = physicalDamage - (physicalDamage * CalculateToughness());
         creatureStatus.HealthPoint -= physicalDamage;
+        UpdateBattleUI(physicalDamage, PhysicalDamage);
+
+        //死んだ場合はdestroyされるので処理中断
+        if (creatureStatus.HealthPoint <= 0) return;
+
         //ひるみ値の蓄積とアニメーション再生フラグのオン
         if (creatureStatus.Skills.Contains(Skill.Strong) is false)
         {
@@ -240,12 +263,6 @@ public class BattleManager : MonoBehaviour
                 creatureStatus.HitactionFlag = true;
             }
         }
-        UpdateBattleUI(physicalDamage, PhysicalDamage);
-
-        GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
-        GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
-        GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
-        GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
 
         //毒無効
         if (creatureStatus.Skills.Contains(Skill.Immunity)) return;

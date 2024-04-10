@@ -28,8 +28,6 @@ public class BattleManager : MonoBehaviour
     //物理ダメージ計算時に蓄積されるひるみ値
     float staggerPoint;
 
-    //ダメージテキスト
-    GameObject damageUI;
     async void Start()
     {
         //ロード待機
@@ -293,14 +291,9 @@ public class BattleManager : MonoBehaviour
         //死んだ場合はdestroyされるので処理中断
         if (creatureStatus.HealthPoint <= 0) return;
 
-        //同時に二つのダメージテキストが出る場合、一度に同じアセットをロードするとエラーになる
-        if(damageUI is null)
-        {
-            var handle = DamageText.LoadAssetAsync<GameObject>();
-            damageUI = await handle.Task;
-            Addressables.Release(handle);
-        }
-
+        var handle = DamageText.InstantiateAsync(localUI.GetComponent<RectTransform>(), false);
+        var damageUI = await handle.Task;
+        damageUI.AddComponent<SelfCleanup>();
         //ダメージタイプごとの処理
         damageTypeMethod(damageUI);
 
@@ -321,8 +314,6 @@ public class BattleManager : MonoBehaviour
 
         string damageText = Mathf.RoundToInt(damage).ToString();
         damageUI.GetComponent<DamageText>().SetDamageText(damageText);
-
-        Instantiate(damageUI, localUI.GetComponent<RectTransform>(), false);
     }
 
     //ダメージタイプごとの処理

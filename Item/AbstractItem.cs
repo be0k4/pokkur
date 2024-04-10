@@ -25,15 +25,6 @@ public abstract class AbstractItem : MonoBehaviour, ICollectable
         id = System.Guid.NewGuid().ToString();
     }
 
-    /*
-    //Collect内で使用する
-    public T Clone<T>() where T : AbstractItem
-    {
-        T clone = (T)this.MemberwiseClone();
-        return clone;
-    }
-    */
-
     /// <summary>
     /// アイテムを回収する。必ずisCorrectedをtrueにする
     /// </summary>

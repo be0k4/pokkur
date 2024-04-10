@@ -118,6 +118,8 @@ public class InGameMenu : MonoBehaviour
         //操作可能にする
         GameManager.invalid = false;
         Time.timeScale = 1;
+        //インゲーム中に使用するstatic変数を初期化する
+        GameManager.isInDungeon = null;
         await SceneManager.LoadSceneAsync(MainMenu.mainmenu);
     }
 

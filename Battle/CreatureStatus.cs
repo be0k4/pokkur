@@ -197,9 +197,9 @@ public class CreatureStatus : MonoBehaviour
         //–hŒä‚Í¬’·‹@‰ï‚ªŒÀ‚ç‚ê‚é‚¤‚¦‚ÉA“G‚ÌUŒ‚—Í‚ªã‚ª‚é‚Ù‚Ç¬Œ÷‚µ‚È‚¢‚Ì‚Å‘½‚ß‚É—^‚¦‚é
         var exp = Mathf.Pow(damage, 2);
 
-        if (this.skills.Contains(Skill.Barricade))
+        if (this.skills.Contains(Skill.IronWall))
         {
-            exp = exp * Skill.Barricade.GetValue();
+            exp = exp * Skill.IronWall.GetValue();
         }
 
         defExp += exp;
@@ -257,9 +257,10 @@ public enum Skill
     Skilled,
     Tough,
     Agile,
-    Barricade,
+    IronWall,
     Strong,
-    Attacker,
+    Technician,
     Immunity,
-    Berserker
+    Berserker,
+    Brawler
 }

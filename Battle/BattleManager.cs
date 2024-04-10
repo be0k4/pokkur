@@ -28,6 +28,8 @@ public class BattleManager : MonoBehaviour
     //物理ダメージ計算時に蓄積されるひるみ値
     float staggerPoint;
 
+    //ダメージテキスト
+    GameObject damageUI;
     async void Start()
     {
         //ロード待機
@@ -99,11 +101,9 @@ public class BattleManager : MonoBehaviour
             AddDefExp?.Invoke(damage);
             return true;
         }
-        else
-        {
-            AddToExp?.Invoke(damage);
-            return false;
-        }
+
+        //防御失敗
+        return false;
     }
 
     /// <summary>
@@ -119,6 +119,7 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp?.GetInvocationList()[0];
             return;
         }
+        AddToExp?.Invoke(slashDamage);
         //HPが0以下になるとDestroyされるので、先に経験値の処理
         GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
@@ -159,6 +160,7 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp?.GetInvocationList()[0];
             return;
         }
+        AddToExp?.Invoke(stabDamage);
         ////HPが0以下になるとDestroyされるので、先に経験値の処理
         GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
@@ -197,7 +199,7 @@ public class BattleManager : MonoBehaviour
             GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
             return;
         }
-
+        AddToExp?.Invoke(strikeDamage);
         ////HPが0以下になるとDestroyされるので、先に経験値の処理
         GivePowExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GivePowExp -= (Action<float>)GivePowExp.GetInvocationList()[0];
@@ -234,9 +236,9 @@ public class BattleManager : MonoBehaviour
         {
             GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
             GiveAsExp -= (Action<float>)GiveAsExp.GetInvocationList()[0];
+            return;
         }
-
-        //HPが0以下になるとDestroyされるので、先に経験値の処理
+        AddToExp?.Invoke(poisonDamage);
         GiveDexExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.Toughness);
         GiveDexExp -= (Action<float>)GiveDexExp.GetInvocationList()[0];
         GiveAsExp?.GetInvocationList()[0].DynamicInvoke(creatureStatus.AttackSpeed);
@@ -273,6 +275,8 @@ public class BattleManager : MonoBehaviour
             var dotDamage = Mathf.RoundToInt(poison / 4);
             creatureStatus.HealthPoint -= dotDamage;
             UpdateBattleUI(dotDamage, PoisonDamage);
+            //死んだ場合はdestroyされるので処理中断
+            if (creatureStatus.HealthPoint <= 0) return;
         }
     }
 
@@ -289,9 +293,13 @@ public class BattleManager : MonoBehaviour
         //死んだ場合はdestroyされるので処理中断
         if (creatureStatus.HealthPoint <= 0) return;
 
-        //ダメージテキストの生成
-        var handle = DamageText.LoadAssetAsync<GameObject>();
-        var damageUI = await handle.Task;
+        //同時に二つのダメージテキストが出る場合、一度に同じアセットをロードするとエラーになる
+        if(damageUI is null)
+        {
+            var handle = DamageText.LoadAssetAsync<GameObject>();
+            damageUI = await handle.Task;
+            Addressables.Release(handle);
+        }
 
         //ダメージタイプごとの処理
         damageTypeMethod(damageUI);
@@ -315,7 +323,6 @@ public class BattleManager : MonoBehaviour
         damageUI.GetComponent<DamageText>().SetDamageText(damageText);
 
         Instantiate(damageUI, localUI.GetComponent<RectTransform>(), false);
-        Addressables.Release(handle);
     }
 
     //ダメージタイプごとの処理

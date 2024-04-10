@@ -9,6 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -26,24 +27,19 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //現在操作中のキャラクター:初期値はパーティの先頭
     public static GameObject activeObject;
 
+    //現在操作中のキャラクターのカメラ：初期値はパーティの先頭
+    CinemachineFreeLook activeCamera;
+
     /// <summary>
-    /// <para>trueの場合UI操作ができない。以下の場合trueになる</para>
-    /// dialogueWindow,
-    /// inputNameWindow,
-    /// managementWindow,
-    /// confirmWindow,
-    /// のいずれかを表示中もしくは
-    /// シーンの初期化中
+    /// <para>trueの場合UI操作ができない。何らかの操作によってUIを表示中は基本true</para>
     /// </summary>
     public static bool invalid = true;
 
     /// <summary>
     /// ダンジョンにいるかどうか
+    /// ゲーム開始時はnullで初回ロード時に初期化
     /// </summary>
-    public static bool isInDungeon;
-
-    //現在操作中のキャラクターのカメラ：初期値はパーティの先頭
-    CinemachineFreeLook activeCamera;
+    public static bool? isInDungeon = null;
 
     [Header("パーティ関連")]
     //追従対象
@@ -60,8 +56,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] RectTransform equipmentWindow;
 
     [Header("UI")]
-    //フォント
-    [SerializeField, Tooltip("ダイナミックフォントのアセットアドレス")] AssetReferenceT<TMP_FontAsset> dynamicFont;
     //ステータスウィンドウ
     [SerializeField] RectTransform statusWindow;
     //Expバー
@@ -117,7 +111,12 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //バッドエンディングを再生するデリゲート
     public event Action badEndTrigger;
     //ゲームオーバーとなる日数
-    public const int gameOver = 14;
+    public const int gameOver = 7;
+
+    //ダイナミックフォント
+    [SerializeField]TMP_FontAsset dynamicFont;
+    //ロード時のアセットへの参照をキャッシュするリスト
+    List<AsyncOperationHandle> handles = new();
 
     //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム 15:npc
     int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14 | 1 << 15;
@@ -200,7 +199,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// </summary>
     public void SetDayText()
     {
-        dayText.text = $"day\n{inGamedays}";
+        dayText.text = $"day\n{inGamedays}/{GameManager.gameOver}";
     }
 
     /// <summary>
@@ -245,12 +244,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     /// </summary>
     async void ManageEnviroment()
     {
-        //ダンジョン内ではライトが追従する
-        if (weatherState is Weather.Dungeon)
-        {
-            //if (activeObject != null) directionalLight.transform.position = activeObject.transform.position + offset;
-            return;
-        }
+        if (weatherState is Weather.Dungeon) return;
 
         inGameHours += Time.deltaTime;
 
@@ -672,13 +666,24 @@ public class GameManager : MonoBehaviour, IDataPersistence
             }
 
             //アイテム効果をpokkurに反映
-            var usedItems = iconFrames.Where(e => e.ConsumableItems.Count() > 0).Select(e => new { e.Index, e.ConsumableItems });
-            foreach (var e in usedItems)
+            var info = iconFrames.Where(e => e.ConsumableItems.Count() > 0).Select(e => new { e.Index, e.ConsumableItems });
+            foreach (var e in info)
             {
+                float total = 0;
+
                 foreach (var item in e.ConsumableItems)
                 {
+                    //回復アイテムは回復量を加算しておいてまとめて回復
+                    if (item is Herb)
+                    {
+                        total += item.GetItemData().data;
+                        continue;
+                    }
+                    //その他のアイテムは個別に使う
                     item.Use(party[e.Index]);
                 }
+
+                if (total > 0) Herb.Use(party[e.Index], total);
             }
 
             Time.timeScale = 1;
@@ -1023,161 +1028,190 @@ public class GameManager : MonoBehaviour, IDataPersistence
         Time.timeScale = 1;
     }
 
-    //以下を読み込む
-    //ゲーム内時間
-    //天候ステート
-    //インベントリ
-    //ポックル
     public async void LoadData(SaveData data)
     {
         //ロード開始
         invalid = true;
 
-        //フォント
-        var op = dynamicFont.LoadAssetAsync<TMP_FontAsset>();
-        var font = await op.Task;
-        //フォントアトラスを空にする
-        font.ClearFontAssetData();
-        Addressables.Release(op);
-        //環境
-        this.inGameHours = data.inGameHours;
-        this.inGamedays = data.inGamedays;
-        this.weatherState = isInDungeon ? Weather.Dungeon : data.weatherState;
-
-        //インベントリ
-        //staticなので、中身が残ってるので消す
-        inventory.Clear();
-        foreach (var address in data.inventory)
+        try
         {
-            //アイテムのprefabを読み込む
-            var handle = Addressables.LoadAssetAsync<GameObject>(address);
-            var prefab = await handle.Task;
-            var deserialized = prefab.GetComponent<ICollectable>();
-            inventory.Add(deserialized);
-            Addressables.Release(handle);
-        }
+            //フォントアトラスを空にする
+            dynamicFont.ClearFontAssetData();
 
-        //ダンジョン内の開始位置
-        List<Vector3> startPositions = null;
-        if (isInDungeon)
-        {
-            var startPosition = GameObject.FindGameObjectWithTag("Start");
-            startPositions = startPosition.GetComponentsInChildren<Transform>().Select(e => e.position).ToList();
-            startPositions.RemoveAt(0);
-        }
+            //環境
+            //タイトルからロードする際は、isInDungeonが初期化されてnullになっているので、ロード時に初期化する
+            //インゲーム中はstatic変数なのでシーンをまたいで値が保存される
+            if (isInDungeon is null) isInDungeon = data.isInDungeon;
+            this.inGameHours = data.inGameHours;
+            this.inGamedays = data.inGamedays;
+            this.weatherState = (bool)isInDungeon ? Weather.Dungeon : data.weatherState;
 
-        //パーティ
-        for (var i = 0; i < data.party.Count; i++)
-        {
-            //prefabのインスタンス化
-            var handle = Addressables.LoadAssetAsync<GameObject>(data.party[i].pokkurAddress);
-            var prefab = await handle.Task;
-
-            //ダンジョン内と外で出現地点の参照が異なる
-            //内：スタートポジションオブジェクト
-            //外：jsonに保存された地点
-            var pokkur = Instantiate(prefab, startPositions?[i] ?? data.party[i].position, Quaternion.identity);
-
-            Addressables.Release(handle);
-
-            //ユニークウェポンは直接ポックルのprefabに含まれるのでスキップされる
-            if (data.party[i].weaponAddress is not ICreature.uniqueWeapon)
+            //インベントリ
+            //アセットへの参照はシーン毎に更新(シーンを切り替えるタイミングで参照をリリース)
+            inventory.Clear();
+            foreach (var address in data.inventory)
             {
-                var weaponHandle = Addressables.LoadAssetAsync<GameObject>(data.party[i].weaponAddress);
-                var weaponPrefab = await weaponHandle.Task;
-                var weapon = Instantiate(weaponPrefab);
-                Addressables.Release(weaponHandle);
-                //武器を設定
-                Destroy(weapon.transform.GetChild(0).gameObject);
-                Transform weaponSlot = pokkur.transform.Find(data.party[i].weaponSlotPath);
-                weapon.transform.SetParent(weaponSlot);
-                weapon.transform.ResetLocaTransform();
-                weapon.AddComponent<AttackCalculater>();
+                var handle = Addressables.LoadAssetAsync<GameObject>(address);
+                //参照をキャッシュしておく
+                handles.Add(handle);
+                var asset = await handle.Task;
+                inventory.Add(asset.GetComponentInChildren<ICollectable>());
             }
-            //ステータスの設定
-            pokkur.GetComponentInChildren<TextMeshProUGUI>().text = data.party[i].name;
-            var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
-            parameter.Power = data.party[i].power;
-            //parameter.MaxHealthPoint = data.party[i].maxHealthPoint;
-            parameter.HealthPoint = data.party[i].healthPoint;
-            parameter.MovementSpeed = data.party[i].movementSpeed;
-            parameter.Dexterity = data.party[i].dexterity;
-            parameter.Toughness = data.party[i].toughness;
-            parameter.AttackSpeed = data.party[i].attackSpeed;
-            parameter.Guard = data.party[i].guard;
-            parameter.Skills = data.party[i].skills;
-            parameter.PowExp = data.party[i].powExp;
-            parameter.DexExp = data.party[i].dexExp;
-            parameter.ToExp = data.party[i].toExp;
-            parameter.AsExp = data.party[i].asExp;
-            parameter.DefExp = data.party[i].defExp;
-            this.party.Add(pokkur);
+
+            //ダンジョン内の場合の開始位置
+            List<Vector3> startPositions = null;
+            if ((bool)isInDungeon)
+            {
+                var startPosition = GameObject.FindGameObjectWithTag("Start");
+                startPositions = startPosition.GetComponentsInChildren<Transform>().Select(e => e.position).ToList();
+                startPositions.RemoveAt(0);
+            }
+
+            //パーティ
+            for (var i = 0; i < data.party.Count; i++)
+            {
+                //prefabのインスタンス化
+                //ダンジョン内と外で出現地点の参照が異なる
+                //内：スタートポジションオブジェクト
+                //外：jsonに保存された地点
+                var handle = Addressables.InstantiateAsync(data.party[i].pokkurAddress, startPositions?[i] ?? data.party[i].position, Quaternion.identity);
+                handle.Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
+                var pokkur = await handle.Task;
+
+                //ユニークウェポンは直接ポックルのprefabに含まれるのでスキップされる
+                if (data.party[i].weaponAddress is not ICreature.uniqueWeapon)
+                {
+                    var weaponHandle = Addressables.InstantiateAsync(data.party[i].weaponAddress);
+                    weaponHandle.Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
+                    var weapon = await weaponHandle.Task;
+                    //武器を設定
+                    Destroy(weapon.transform.GetChild(0).gameObject);
+                    Transform weaponSlot = pokkur.transform.Find(data.party[i].weaponSlotPath);
+                    weapon.transform.SetParent(weaponSlot);
+                    weapon.transform.ResetLocaTransform();
+                    weapon.AddComponent<AttackCalculater>();
+                }
+                //ステータスの設定
+                pokkur.GetComponentInChildren<TextMeshProUGUI>().text = data.party[i].name;
+                var parameter = pokkur.GetComponentInChildren<CreatureStatus>();
+                parameter.Power = data.party[i].power;
+                parameter.HealthPoint = data.party[i].healthPoint;
+                parameter.MovementSpeed = data.party[i].movementSpeed;
+                parameter.Dexterity = data.party[i].dexterity;
+                parameter.Toughness = data.party[i].toughness;
+                parameter.AttackSpeed = data.party[i].attackSpeed;
+                parameter.Guard = data.party[i].guard;
+                parameter.Skills = data.party[i].skills;
+                parameter.PowExp = data.party[i].powExp;
+                parameter.DexExp = data.party[i].dexExp;
+                parameter.ToExp = data.party[i].toExp;
+                parameter.AsExp = data.party[i].asExp;
+                parameter.DefExp = data.party[i].defExp;
+                this.party.Add(pokkur);
+            }
+        }
+        catch (InvalidCastException)
+        {
+            Debug.LogError("型変換に失敗しました。");
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+            Debug.Log(e.Message);
         }
 
         //ロード完了
         invalid = false;
     }
 
-    //以下を保存する
-    //ゲーム内時間
-    //天候ステート
-    //インベントリ
-    //ポックル
     public void SaveData(SaveData data)
     {
-        data.inGameHours = this.inGameHours;
-        data.inGamedays = this.inGamedays;
-        //ダンジョン外ではステートを保存する
-        data.weatherState = isInDungeon ? data.weatherState : this.weatherState;
-
-        data.inventory.Clear();
-        foreach (var item in inventory)
+        try
         {
-            var address = item.GetItemData().address;
-            data.inventory.Add(address);
+            data.inGameHours = this.inGameHours;
+            data.inGamedays = this.inGamedays;
+            data.weatherState = (bool)isInDungeon ? data.weatherState : this.weatherState;
+            data.isInDungeon = (bool)isInDungeon;
+
+            data.inventory.Clear();
+            foreach (var item in inventory)
+            {
+                var address = item.GetItemData().address;
+                data.inventory.Add(address);
+            }
+
+            //保存された位置を取得しておき、ダンジョン内の場合はこれをそのまま保存する
+            List<Vector3> savedPositions = data.party.Select(e => e.position).ToList();
+
+            data.party.Clear();
+
+            for (var i = 0; i < party.Count; i++)
+            {
+                var name = party[i].GetComponentInChildren<TextMeshProUGUI>().text;
+                var parameter = party[i].GetComponentInChildren<CreatureStatus>();
+                var weapon = party[i].GetComponentInChildren<Weapon>();
+                var weaponAddress = weapon.GetItemData().address;
+                var weaponSlotPath = weapon.transform.parent.GetFullPath();
+                var index = weaponSlotPath.IndexOf('ア');
+                weaponSlotPath = weaponSlotPath.Remove(0, index);
+
+                //ダンジョン内と外で保存する地点が異なる
+                Vector3 position;
+                if ((bool)isInDungeon)
+                {
+                    try
+                    {
+                        position = savedPositions[i];
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        //ダンジョン内で仲間になった場合、入口の地点が無い可能性があるので、その場合は一つ前の仲間と同じ地点で保存する
+                        position = savedPositions[i - 1];
+                    }
+                }
+                else
+                {
+                    position = party[i].transform.position;
+                }
+
+                var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+                    parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
+
+                data.party.Add(serializable);
+            }
         }
-
-        //保存された位置を取得しておき、ダンジョン内の場合はこれをそのまま保存する
-        List<Vector3> savedPositions = data.party.Select(e => e.position).ToList();
-
-        data.party.Clear();
-
-        for (var i = 0; i < party.Count; i++)
+        catch (InvalidCastException)
         {
-            var name = party[i].GetComponentInChildren<TextMeshProUGUI>().text;
-            var parameter = party[i].GetComponentInChildren<CreatureStatus>();
-            var weapon = party[i].GetComponentInChildren<Weapon>();
-            var weaponAddress = weapon.GetItemData().address;
-            var weaponSlotPath = weapon.transform.parent.GetFullPath();
-            var index = weaponSlotPath.IndexOf('ア');
-            weaponSlotPath = weaponSlotPath.Remove(0, index);
-
-            //ダンジョン内と外で保存する地点が異なる
-            Vector3 position;
-            if (isInDungeon)
-            {
-                try
-                {
-                    position = savedPositions[i];
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    //ダンジョン内で仲間になった場合、入口の地点が無いので、その場合は一つ前の仲間と同じ地点で保存する
-                    position = savedPositions[i - 1];
-                }
-            }
-            else
-            {
-                position = party[i].transform.position;
-            }
-
-            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
-                parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
-
-            data.party.Add(serializable);
+            Debug.LogError("型変換に失敗しました。");
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+            Debug.Log(e.Message);
         }
     }
+
+    private void OnDestroy()
+    {
+        //インベントリ内のアセットへの参照をリリース
+        var groupHandle = Addressables
+        .ResourceManager
+        .CreateGenericGroupOperation(handles);
+        Addressables.Release(groupHandle);
+    }
 }
+
+/// <summary>
+/// オブジェクトが破棄された際に、アセット(自身)を解放する
+/// </summary>
+internal class SelfCleanup : MonoBehaviour
+{
+    void OnDestroy()
+    {
+        Addressables.ReleaseInstance(gameObject);
+    }
+}
+
 public enum Weather
 {
     Day,

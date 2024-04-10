@@ -56,7 +56,7 @@ public class AttackCalculater : MonoBehaviour
 
         //スキルがある場合のダメージ変動
         if (creatureStatus.Skills.Contains(Skill.Berserker) && creatureStatus.HealthPoint <= creatureStatus.MaxHealthPoint / 2) damage += Skill.Berserker.GetValue();
-        if (creatureStatus.Skills.Contains(Skill.Attacker)) damage *= 0.8f;
+        if (creatureStatus.Skills.Contains(Skill.Technician)) damage *= 0.8f;
         return damage;
     }
 
@@ -89,6 +89,10 @@ public class AttackCalculater : MonoBehaviour
         }
         enemyBattleManager.GiveAsExp += creatureStatus.AddAsExp;
 
-        other.SendMessage(methodName, CalculateAttackDamage());
+        var damage = CalculateAttackDamage();
+
+        if (creatureStatus.Skills.Contains(Skill.Brawler)) Herb.Use(gameObject.transform.root.gameObject, damage * Skill.Brawler.GetValue());
+
+        other.SendMessage(methodName, damage);
     }
 }

@@ -41,7 +41,7 @@ public class DataFileHandler
             var fullPath = Path.Combine(dataDirPath, profileId, dataFileName);
             if (File.Exists(fullPath) is false)
             {
-                Debug.LogError($"このディレクトリ　{profileId}　にはセーブデータが存在しません。スキップします。");
+                //Debug.LogError($"このディレクトリ　{profileId}　にはセーブデータが存在しません。スキップします。");
                 continue;
             }
 

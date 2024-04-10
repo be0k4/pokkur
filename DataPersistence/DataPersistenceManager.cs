@@ -28,7 +28,7 @@ public class DataPersistenceManager : MonoBehaviour
         //シングルトン
         if (instance is not null)
         {
-            Debug.LogWarning("一つ以上のインスタンスがシーン上にあります");
+            //Debug.LogWarning("一つ以上のインスタンスがシーン上にあります");
             Destroy(this.gameObject);
             return;
         }
@@ -56,11 +56,6 @@ public class DataPersistenceManager : MonoBehaviour
     {
         dataPersistenceObjects = FindAllDataPersistenceObjects();
         LoadGame();
-    }
-
-    void OnApplicationQuit()
-    {
-        SaveGame();
     }
 
     /// <summary>
@@ -105,9 +100,10 @@ public class DataPersistenceManager : MonoBehaviour
         //必要に応じて初期設定としてデータを追加する
         newData.inventory.Add("Herb.prefab");
         newData.inventory.Add("Herb.prefab");
+        newData.inventory.Add("Herb.prefab");
         var skills = new List<Skill>() { };
 
-        var pokkur = new SerializablePokkur("マスク", 1, 1, 1, 1, 10, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
+        var pokkur = new SerializablePokkur("ヒーロー", 1, 1, 1, 1, 20, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
             "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
         newData.party.Add(pokkur);
 
@@ -163,7 +159,7 @@ public class DataPersistenceManager : MonoBehaviour
         }
 
         //IdataPersistenceを実装したオブジェクトを最初に取得し、それに対して一括でセーブオブジェクトへの書き込みを行う
-        //この際dataPersistenceObjectはたとえDestroy()されていたとしても、偽装nullとしてフィールドの参照は生きたままGCに回収されない。
+        //この際dataPersistenceObjectはたとえDestroy()されていたとしても、偽装nullとして参照は生きたままGCに回収されない。
         //そのため、Destroyされていてもリポップ管理のセーブを行う事ができる。
         foreach (var dataPersistenceObject in dataPersistenceObjects)
         {

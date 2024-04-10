@@ -7,15 +7,19 @@ public class Orb : MonoBehaviour, ICollectable
     bool isCorrected;
     [SerializeField] Orbs type;
 
-    public Orbs Type { get => type;}
+    public Orbs Type { get => type; }
     public bool IsCorrected { set => isCorrected = value; }
 
     public void Collect()
     {
-        var clone = (Orb)this.MemberwiseClone();
-        if (GameManager.inventory.Count < GameManager.inventorySize) GameManager.inventory.Add(clone);
-        Destroy(gameObject);
-        isCorrected = true;
+        if (GameManager.inventory.Count < GameManager.inventorySize)
+        {
+            SEAudioManager.instance.PlaySE(SEAudioManager.instance.recruit);
+            var clone = (Orb)this.MemberwiseClone();
+            GameManager.inventory.Add(clone);
+            Destroy(transform.root.gameObject);
+            isCorrected = true;
+        }
     }
 
     public int CompareTo(ICollectable other)

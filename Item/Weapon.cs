@@ -20,10 +20,14 @@ public class Weapon : MonoBehaviour, ICollectable
     }
     public void Collect()
     {
-        var clone = (Weapon)this.MemberwiseClone();
-        if (GameManager.inventory.Count < GameManager.inventorySize) GameManager.inventory.Add(clone);
-        Destroy(gameObject);
-        isCorrected = true;
+        if (GameManager.inventory.Count < GameManager.inventorySize)
+        {
+            SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
+            var clone = (Weapon)this.MemberwiseClone();
+            GameManager.inventory.Add(clone);
+            Destroy(gameObject);
+            isCorrected = true;
+        }
     }
 
     [ContextMenu("Generate guid for id")]

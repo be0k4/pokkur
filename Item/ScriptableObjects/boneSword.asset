@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
   m_Name: boneSword
   m_EditorClassIdentifier: 
-  data: 16
+  data: 20
   icon: {fileID: 21300000, guid: 97f1c00da988c4a45bda7f4818be22ee, type: 3}
   prefab: {fileID: 1012794473909283484, guid: 6d74ee662cd95da46a6775f8fb653ced, type: 3}
-  itemText: "\u9AA8\u306E\u5263\n\u30C0\u30E1\u30FC\u30B8 16"
+  itemText: "\u9AA8\u306E\u5263\n\u30C0\u30E1\u30FC\u30B8 20"
   address: boneSword.prefab

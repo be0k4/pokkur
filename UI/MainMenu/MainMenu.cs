@@ -16,6 +16,7 @@ public class MainMenu : MonoBehaviour
     [SerializeField] Button newGame;
     [SerializeField] Button continueGame;
     [SerializeField] Button loadGame;
+    [SerializeField] Button quitGame;
 
 
     void Start()
@@ -50,6 +51,16 @@ public class MainMenu : MonoBehaviour
         DeactiveMenu();
     }
 
+    public void OnQuitGameClicked()
+    {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     //コンティニュー先のデータは、シーンロード時に初期化済み
     public void OnContinueClicked()
     {
@@ -67,6 +78,7 @@ public class MainMenu : MonoBehaviour
         newGame.interactable = false;
         continueGame.interactable = false;
         loadGame.interactable = false;
+        quitGame.interactable = false;
     }
 
     public void ActivateMenu()

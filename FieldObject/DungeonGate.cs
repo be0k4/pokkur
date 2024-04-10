@@ -38,14 +38,16 @@ public class DungeonGate : AbstractInteractable
     }
 
     /// <summary>
-    /// セーブを行い、シーン内外のフラグを切り替えて、シーンを読みこむ。
+    /// 時間を進めてセーブを行い、シーン内外のフラグを切り替えて、シーンを読みこむ。
     /// </summary>
     /// <param name="inOutDungeon">ダンジョンの入口もしくは出口の場合true</param>
     void IntoGate(bool inOutDungeon)
     {
         DataPersistenceManager.instance.SaveGame();
-        //注意！ダンジョン内か外かでセーブの処理が切り替わるため、セーブの後に切り替える。
+        //注意！ダンジョン内か外かでセーブ処理が切り替わるため、セーブの後にフラグを切り替える。
+        //この時点では切り替える前のフラグがデータに保存されている
         if (inOutDungeon) GameManager.isInDungeon = !GameManager.isInDungeon;
+        //タイトルからロードする際は上記切り替え前のデータが参照される、このシーン遷移後に行うロードでは切り替え後のフラグが参照される
         SceneManager.LoadSceneAsync(this.sceneName);
     }
 }

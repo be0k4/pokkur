@@ -87,9 +87,9 @@ public static class Extensions
     //耐性関連
     public static Dictionary<Resistance, float> resistDic = new()
     {
-        { Resistance.Weak, 0.75f },
+        { Resistance.Weak, 1.5f },
         { Resistance.Normal, 1.0f },
-        { Resistance.Resist, 1.25f }
+        { Resistance.Resist, 0.5f }
     };
 
     public static float GetResist(this Resistance resistance)
@@ -101,15 +101,16 @@ public static class Extensions
     {
         //経験値ボーナス系
         //スキル名、説明文、影響を与える数値
-        { Skill.Powerful, ("力に経験値のボーナス", 1.2f) },
-        { Skill.Skilled, ("技に経験値のボーナス", 1.2f) },
-        { Skill.Tough, ("頑丈に経験値のボーナス", 1.2f) },
-        { Skill.Agile, ("素早さに経験値のボーナス", 1.2f) },
-        { Skill.Barricade, ("防御に経験値のボーナス", 1.2f) },
+        { Skill.Powerful, ("力に経験値のボーナス", 1.5f) },
+        { Skill.Skilled, ("技に経験値のボーナス", 1.5f) },
+        { Skill.Tough, ("頑丈に経験値のボーナス", 1.5f) },
+        { Skill.Agile, ("素早さに経験値のボーナス", 1.5f) },
+        { Skill.IronWall, ("防御に経験値のボーナス", 1.5f) },
         { Skill.Strong, ("敵の攻撃によって怯まない", 0) },
-        { Skill.Attacker, ("ダメージが減少するが、攻撃速度が大幅に増加", 0) },
+        { Skill.Technician, ("ダメージが減少するが、攻撃速度が大幅に増加", 0) },
         { Skill.Immunity, ("毒への耐性", 0) },
-        { Skill.Berserker, ("HPが半分以下の状態だとダメージが増加する", 6) }
+        { Skill.Berserker, ("HPが半分以下の状態だとダメージが増加する", 6) },
+        { Skill.Brawler, ("攻撃時にわずかに回復する", 0.1f)}
     };
 
     public static string GetDescription(this Skill sorce)

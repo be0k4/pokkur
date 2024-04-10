@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
   m_Name: drop_metal
   m_EditorClassIdentifier: 
-  data: 50
-  icon: {fileID: 21300000, guid: ac1d107ff71b6fd4199021bed150fcf1, type: 3}
-  prefab: {fileID: 7261369943718715834, guid: 8d0d2d7f281223d42b6f1ce8036ae2b6, type: 3}
+  data: 100
+  icon: {fileID: 21300000, guid: 4a0c9c8c86f05ee4799767e390098f75, type: 3}
+  prefab: {fileID: 7261369943718715834, guid: 82f3425a713ed644492fe4694827586d, type: 3}
   itemText: "\u9244\u306E\u96EB\n\u5927\u91CF\u306E\u7D4C\u9A13\u5024\u3092\u7372\u5F97"
   address: Drop_metal.prefab

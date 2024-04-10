@@ -4,10 +4,15 @@ public class Drop : AbstractItem
 {
     public override void Collect()
     {
-        var clone = (Drop)MemberwiseClone();
-        if (GameManager.inventory.Count < GameManager.inventorySize) GameManager.inventory.Add(clone);
-        Destroy(gameObject);
-        isCorrected = true;
+        if (GameManager.inventory.Count < GameManager.inventorySize)
+        {
+            //Œø‰Ê‰¹‚ð—¬‚·
+            SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
+            var clone = (Drop)this.MemberwiseClone();
+            GameManager.inventory.Add(clone);
+            Destroy(gameObject);
+            isCorrected = true;
+        }
     }
 
     //ŒoŒ±’l‚ð—^‚¦‚é

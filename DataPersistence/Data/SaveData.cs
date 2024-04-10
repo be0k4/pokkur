@@ -17,6 +17,7 @@ public class SaveData : ISavable
     public int inGamedays;
     public float inGameHours;
     public Weather weatherState;
+    public bool isInDungeon;
 
     /// <summary>
     /// このコンストラクターに定義された値が初期値となる
@@ -40,6 +41,7 @@ public class SaveData : ISavable
         inGamedays = 0;
         inGameHours = 0;
         weatherState = Weather.Day;
+        isInDungeon = false;
     }
 
     //日付を文字列に変換して返す

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
   m_Name: metalSpear
   m_EditorClassIdentifier: 
-  data: 16
+  data: 18
   icon: {fileID: 21300000, guid: 6d939abb64c86dd40907f8c7ed9e55e1, type: 3}
   prefab: {fileID: 4642055383875868110, guid: 992f3b5af24ab2547adeac8a8503548d, type: 3}
   itemText: "\u9244\u306E\u69CD\n\u30C0\u30E1\u30FC\u30B8 16"

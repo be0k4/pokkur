@@ -37,10 +37,7 @@ public class SavePoint : AbstractInteractable
         //パーティの全員を全回復
         foreach (var pokkur in gameManager.Party)
         {
-            var status = pokkur.GetComponentInChildren<CreatureStatus>();
-            var heal = status.MaxHealthPoint - status.HealthPoint;
-            status.HealthPoint = status.MaxHealthPoint;
-            pokkur.GetComponentInChildren<BattleManager>().UpdateBattleUI(heal, BattleManager.HealDamage);
+            Herb.Use(pokkur, 999);
         }
 
         //メインメニューを表示

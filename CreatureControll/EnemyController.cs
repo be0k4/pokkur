@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -257,7 +256,7 @@ public class EnemyController : AbstractController, IDataPersistence
     /// 死亡時エフェクトを生成し、オブジェクトを破棄する。ランダムでアイテムを生成する
     /// </summary>
 
-    public override async void Dead()
+    public override void Dead()
     {
         if (creatureStatus.HealthPoint > 0 || isDead) return;
 
@@ -265,20 +264,14 @@ public class EnemyController : AbstractController, IDataPersistence
         isDead = true;
         //リポップ管理
         isKilled = true;
-        
+
         //死亡時エフェクトを読み込んでインスタンス化
-        var handle = deathEffect.LoadAssetAsync<GameObject>();
-        var prefab = await handle.Task;
-        Instantiate(prefab, transform.position, Quaternion.identity);
-        Addressables.Release(handle);
+        deathEffect.InstantiateAsync(transform.position, Quaternion.identity).Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
 
         //dropRate%で死亡時にアイテムを読み込んでインスタンス化
         if (dropRate >= Random.Range(1, 101))
         {
-            handle = item.LoadAssetAsync<GameObject>();
-            prefab = await handle.Task;
-            Instantiate(prefab, transform.position, Quaternion.Euler(-90, 0, 0));
-            Addressables.Release(handle);
+            item.InstantiateAsync(transform.position, Quaternion.Euler(-90, 0, 0)).Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
         }
 
         Destroy(this.gameObject);

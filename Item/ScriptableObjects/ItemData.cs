@@ -1,8 +1,8 @@
 using UnityEngine;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.AddressableAssets;
-using System.Collections.Generic;
 #endif
 
 /// <summary>

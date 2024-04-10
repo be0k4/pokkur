@@ -1,7 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 /// <summary>
 /// ポックルの制御関連
@@ -31,7 +30,7 @@ public class PokkurController : AbstractController
         movementSpeed = creatureStatus.MovementSpeed;
         this.attackSpeed = creatureStatus.AttackSpeed * 0.01f;
         //スキルがある場合、攻撃速度に30％ボーナス
-        if (creatureStatus.Skills.Contains(Skill.Attacker)) this.attackSpeed = attackSpeed + 0.3f;
+        if (creatureStatus.Skills.Contains(Skill.Technician)) this.attackSpeed = attackSpeed + 0.3f;
         attackCooldown = ICreature.attackCooldown * (1.0f - (0.5f * attackSpeed));
         maxEnemy = creatureStatus.MaxEnemy;
     }
@@ -168,17 +167,13 @@ public class PokkurController : AbstractController
     /// <summary>
     /// 死亡時エフェクトを生成し、オブジェクトを破棄する。フォローターゲットを持つ場合は、それを初期化する。
     /// </summary>
-    public override async void Dead()
+    public override void Dead()
     {
         //Destroyは次のフレームで行われるため、次のフレームではこのメソッドをキャンセルする
         if (creatureStatus.HealthPoint > 0 || isDead) return;
         //二度呼び出されないようにする
         isDead = true;
-
-        var handle = deathEffect.LoadAssetAsync<GameObject>();
-        var prefab = await handle.Task;
-        Instantiate(prefab, transform.position, Quaternion.identity);
-        Addressables.Release(handle);
+        deathEffect.InstantiateAsync(transform.position, Quaternion.identity).Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
 
         //破棄する前に、フォローターゲットの親子関係を解除して位置を戻してあげる
         var followingTargets = transform.Find("FollowingTargets");
@@ -196,7 +191,5 @@ public class PokkurController : AbstractController
     {
         if (other.gameObject.layer is not ICreature.layer_item) return;
         other.gameObject.GetComponentInParent<ICollectable>().Collect();
-        //効果音を流す
-        SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
     }
 }

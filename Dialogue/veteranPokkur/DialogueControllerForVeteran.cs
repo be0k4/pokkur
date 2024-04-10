@@ -51,16 +51,16 @@ public class DialogueControllerForVeteran : DialogueController
             var serialized = data.standby[i];
             //スタンバイを復元する
             //prefabのインスタンス化
-            var handle = Addressables.LoadAssetAsync<GameObject>(serialized.pokkurAddress);
-            var prefab = await handle.Task;
-            var pokkur = Instantiate(prefab, standbyPositionList[i]);
+            var handle = Addressables.InstantiateAsync(serialized.pokkurAddress, standbyPositionList[i]);
+            handle.Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
+            var pokkur = await handle.Task;
             pokkur.transform.ResetLocaTransform();
             //ユニークウェポン以外
             if (serialized.weaponAddress is not ICreature.uniqueWeapon)
             {
-                handle = Addressables.LoadAssetAsync<GameObject>(serialized.weaponAddress);
-                var weaponPrefab = await handle.Task;
-                var weapon = Instantiate(weaponPrefab);
+                var weaponHandle = Addressables.InstantiateAsync(serialized.weaponAddress);
+                weaponHandle.Completed += op => op.Result.AddComponent(typeof(SelfCleanup));
+                var weapon = await weaponHandle.Task;
                 //武器を設定
                 Destroy(weapon.transform.GetChild(0).gameObject);
                 Transform weaponSlot = pokkur.transform.Find(serialized.weaponSlotPath);
@@ -68,7 +68,6 @@ public class DialogueControllerForVeteran : DialogueController
                 weapon.transform.ResetLocaTransform();
                 weapon.AddComponent<AttackCalculater>();
             }
-            Addressables.Release(handle);
             //ステータスの設定
             pokkur.GetComponentInChildren<TextMeshProUGUI>().text = serialized.name;
             var parameter = pokkur.GetComponentInChildren<CreatureStatus>();

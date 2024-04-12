@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //インベントリ
     public static List<ICollectable> inventory = new();
     //インベントリのサイズ
-    public const int inventorySize = 40;
+    public const int inventorySize = 35;
 
     //現在操作中のキャラクター:初期値はパーティの先頭
     public static GameObject activeObject;
@@ -121,7 +121,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム 15:npc
     int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14 | 1 << 15;
 
-    public List<GameObject> Party { get => party; }
+    public IEnumerable<GameObject> Party { get => party; }
 
     async UniTask Start()
     {
@@ -989,7 +989,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
         var newStandby = managementWindow.Find("Standby").GetComponentsInChildren<ManagementIcon>().Select(e => e.Pokkur).ToList();
         newStandby.RemoveAll(e => e is null);
         if (newStandby.Count() > ICreature.standbyLimit) Debug.LogError("スタンバイの上限を超えています。");
-        //standby = newStandby;
         standby.Clear();
         foreach (var pokkur in newStandby)
         {
@@ -1107,6 +1106,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 parameter.ToExp = data.party[i].toExp;
                 parameter.AsExp = data.party[i].asExp;
                 parameter.DefExp = data.party[i].defExp;
+                pokkur.GetComponent<PokkurController>().IsFollowing = data.party[i].isFollowing;
                 this.party.Add(pokkur);
             }
         }
@@ -1175,7 +1175,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 }
 
                 var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
-                    parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position);
+                    parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position, party[i].GetComponent<PokkurController>().IsFollowing);
 
                 data.party.Add(serializable);
             }

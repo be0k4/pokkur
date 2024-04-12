@@ -104,7 +104,7 @@ public class DataPersistenceManager : MonoBehaviour
         var skills = new List<Skill>() { };
 
         var pokkur = new SerializablePokkur("ヒーロー", 1, 1, 1, 1, 20, skills, healthPoint: 120, movementSpeed: 5, 0, 0, 0, 0, 0,
-            "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23));
+            "heroPokkur.prefab", "woodSword.prefab", "アーマチュア/Bone/torso/upper_arm_R/middle_arm_R/bottom_arm_R/hand_R/hand_R_end/Sword_Club_Slot", new Vector3(70, 0, 23), false);
         newData.party.Add(pokkur);
 
         this.gameData = newData;
@@ -227,7 +227,7 @@ public class DataPersistenceManager : MonoBehaviour
         weaponSlotPath = weaponSlotPath.Remove(0, index);
 
         var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
-            parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position);
+            parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position, false);
 
         gameData.standby.Add(serializable);
     }

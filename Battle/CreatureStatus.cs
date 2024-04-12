@@ -58,7 +58,6 @@ public class CreatureStatus : MonoBehaviour
     private bool isAttaking;
     private bool hitactionFlag;
 
-    //ゲッターセッター
     public Species Species { get => species; }
     public float MaxHealthPoint { get => maxHealthPoint; set => maxHealthPoint = value; }
     public float HealthPoint { get => Mathf.RoundToInt(healthPoint); set => healthPoint = value; }

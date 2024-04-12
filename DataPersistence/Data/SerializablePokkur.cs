@@ -33,9 +33,10 @@ public class SerializablePokkur
     //武器とポックルの位置
     public string weaponSlotPath;
     public Vector3 position;
+    public bool isFollowing;
 
     public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, List<Skill> skills, float healthPoint, float movementSpeed,
-        float powExp, float dexExp, float toExp, float asExp, float defExp, string pokkurAddress, string weaponAddress, string weaponSlotPath, Vector3 position)
+        float powExp, float dexExp, float toExp, float asExp, float defExp, string pokkurAddress, string weaponAddress, string weaponSlotPath, Vector3 position, bool isFollowing)
     {
         //ステータス
         this.name = name;
@@ -61,5 +62,6 @@ public class SerializablePokkur
 
         this.weaponSlotPath = weaponSlotPath;
         this.position = position;
+        this.isFollowing = isFollowing;
     }
 }

@@ -42,7 +42,6 @@ public class PokkurController : AbstractController
 
     void FixedUpdate()
     {
-
         if (characterController.isGrounded)
         {
             //全ステート共通処理
@@ -70,7 +69,8 @@ public class PokkurController : AbstractController
                     break;
                 //待機
                 case State.Idle:
-                    if (isFollowing && OverDistance(followingTarget.position, ICreature.stoppingDistance)) creatureState = State.Follow;
+                    if (followingTarget is null || isFollowing is false) return;
+                    if (OverDistance(followingTarget.position, ICreature.stoppingDistance)) creatureState = State.Follow;
                     break;
                 //移動
                 case State.Move:

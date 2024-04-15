@@ -97,29 +97,69 @@ public static class Extensions
         return resistDic[resistance];
     }
 
-    public static Dictionary<Skill, (string description, float value)> skillDic = new()
+    public static Dictionary<Skill, string> skillDic = new()
     {
         //経験値ボーナス系
-        //スキル名、説明文、影響を与える数値
-        { Skill.Powerful, ("力に経験値のボーナス", 1.5f) },
-        { Skill.Skilled, ("技に経験値のボーナス", 1.5f) },
-        { Skill.Tough, ("頑丈に経験値のボーナス", 1.5f) },
-        { Skill.Agile, ("素早さに経験値のボーナス", 1.5f) },
-        { Skill.IronWall, ("防御に経験値のボーナス", 1.5f) },
-        { Skill.Strong, ("敵の攻撃によって怯まない", 0) },
-        { Skill.Technician, ("ダメージが減少するが、攻撃速度が大幅に増加", 0) },
-        { Skill.Immunity, ("毒への耐性", 0) },
-        { Skill.Berserker, ("HPが半分以下の状態だとダメージが増加する", 6) },
-        { Skill.Brawler, ("攻撃時にわずかに回復する", 0.1f)}
+        //スキル名、説明文
+        { Skill.Powerful, "力に経験値のボーナス" },
+        { Skill.Skilled, "技に経験値のボーナス" },
+        { Skill.Tough, "頑丈に経験値のボーナス" },
+        { Skill.Agile, "素早さに経験値のボーナス" },
+        { Skill.IronWall, "防御に経験値のボーナス" },
+        { Skill.Strong, "敵の攻撃によって怯まない" },
+        { Skill.Technician, "ダメージが減少するが、攻撃速度が大幅に増加" },
+        { Skill.Immunity, "毒への耐性" },
+        { Skill.Berserker, "HPが半分以下の状態で追加ダメージを獲得" },
+        { Skill.Brawler, "攻撃時にわずかに回復する" }
     };
 
+    /// <summary>
+    /// スキルの説明文を取得する。
+    /// </summary>
     public static string GetDescription(this Skill sorce)
     {
-        return skillDic[sorce].description;
+        return skillDic[sorce];
     }
 
-    public static float GetValue(this Skill sorce)
+    //スキルの効果を追いやすくするため、べた書きでなくメソッドにする
+    /// <summary>
+    /// 対象のスキルを持つ場合、経験値を1.5倍に増やす。
+    /// </summary>
+    public static void GetMoreExp(List<Skill> skills, Skill skill, ref float exp)
     {
-        return skillDic[sorce].value;
+        if (skills.Contains(skill)) exp *= 1.5f;
+    }
+
+    /// <summary>
+    /// HPが1/2以下で攻撃力に固定追加ダメージ。
+    /// </summary>
+    public static void BerserkMode(CreatureStatus creatureStatus, ref float attackDamage)
+    {
+        if (creatureStatus.Skills.Contains(Skill.Berserker) && creatureStatus.HealthPoint <= creatureStatus.MaxHealthPoint / 2) attackDamage += 6;
+    }
+
+    /// <summary>
+    /// 攻撃力を0.8倍にする。
+    /// </summary>
+    /// <param name="attackDamage">攻撃力</param>
+    public static void TechnicianDemerit(List<Skill> skills, ref float attackDamage)
+    {
+        if (skills.Contains(Skill.Technician)) attackDamage *= 0.8f;
+    }
+    /// <summary>
+    /// 攻撃速度を30％上昇。
+    /// </summary>
+    /// <param name="attackSpeed">攻撃速度</param>
+    public static void TecnicianMerit(List<Skill> skills, ref float attackSpeed)
+    {
+        if (skills.Contains(Skill.Technician)) attackSpeed += 0.3f;
+    }
+
+    /// <summary>
+    /// 攻撃時にダメージの1/10回復する。
+    /// </summary>
+    public static void BrawlerMode(List<Skill> skills, GameObject target, float damage)
+    {
+        if(skills.Contains(Skill.Brawler)) Herb.Use(target, damage * 0.1f);
     }
 }

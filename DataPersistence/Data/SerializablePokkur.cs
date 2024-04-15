@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// シリアライズ可能なポックル
+/// シリアライズ可能な型で構成されたポックルオブジェクト
 /// 個体差のあるものに関してのみ保存する。
 /// </summary>
 [System.Serializable]
@@ -17,7 +17,8 @@ public class SerializablePokkur
     public float toughness;
     public float attackSpeed;
     public float guard;
-    public List<Skill> skills;
+    [SerializeField] List<Skill> skills;
+    [SerializeField] List<SerializableBuff> buffs;
 
     //経験値
     public float powExp;
@@ -35,7 +36,10 @@ public class SerializablePokkur
     public Vector3 position;
     public bool isFollowing;
 
-    public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, List<Skill> skills, float healthPoint, float movementSpeed,
+    public IEnumerable<Skill> Skills { get => skills; }
+    public IEnumerable<SerializableBuff> Buffs { get => buffs; }
+
+    public SerializablePokkur(string name, float power, float dexterity, float toughness, float attackSpeed, float guard, List<Skill> skills, List<SerializableBuff> buffs, float healthPoint, float movementSpeed,
         float powExp, float dexExp, float toExp, float asExp, float defExp, string pokkurAddress, string weaponAddress, string weaponSlotPath, Vector3 position, bool isFollowing)
     {
         //ステータス
@@ -48,6 +52,7 @@ public class SerializablePokkur
         this.skills = skills;
         this.healthPoint = healthPoint;
         this.movementSpeed = movementSpeed;
+        this.buffs = buffs;
 
         //経験値
         this.powExp = powExp;
@@ -63,5 +68,18 @@ public class SerializablePokkur
         this.weaponSlotPath = weaponSlotPath;
         this.position = position;
         this.isFollowing = isFollowing;
+    }
+
+    [System.Serializable]
+    public class SerializableBuff
+    {
+        public float buffTimer;
+        public Buffs type;
+
+        public SerializableBuff(float buffTimer, Buffs type)
+        {
+            this.buffTimer = buffTimer;
+            this.type = type;
+        }
     }
 }

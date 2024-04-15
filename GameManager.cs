@@ -432,7 +432,12 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         //パラメータの更新
         int attackDmg = Mathf.RoundToInt(target.GetComponentInChildren<AttackCalculater>().CalculateAttackDamage());
-        parameterText.text = $"{status.Species}\n{status.MaxHealthPoint}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}\n{status.SlashResist}\n{status.StabResist}\n{status.StrikeResist}";
+        StringBuilder sb = new();
+        foreach (var buff in status.Buffs)
+        {
+            sb.Append($"　{buff}");
+        }
+        parameterText.text = $"{status.Species}\n{status.MaxHealthPoint}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}\n{status.SlashResist}\n{status.StabResist}\n{status.StrikeResist}\n{sb}";
 
         //スキルとスキル説明の更新
         for (int i = 0; i < this.skills.Length; i++)
@@ -1100,13 +1105,21 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 parameter.Toughness = data.party[i].toughness;
                 parameter.AttackSpeed = data.party[i].attackSpeed;
                 parameter.Guard = data.party[i].guard;
-                parameter.Skills = data.party[i].skills;
+                parameter.Skills = data.party[i].Skills.ToList();
                 parameter.PowExp = data.party[i].powExp;
                 parameter.DexExp = data.party[i].dexExp;
                 parameter.ToExp = data.party[i].toExp;
                 parameter.AsExp = data.party[i].asExp;
                 parameter.DefExp = data.party[i].defExp;
                 pokkur.GetComponent<PokkurController>().IsFollowing = data.party[i].isFollowing;
+
+                foreach (var buff in data.party[i].Buffs)
+                {
+                    var buffInstance = pokkur.AddComponent<Buff>();
+                    buffInstance.SetUp(buff.buffTimer, buff.type);
+
+                }
+
                 this.party.Add(pokkur);
             }
         }
@@ -1174,7 +1187,18 @@ public class GameManager : MonoBehaviour, IDataPersistence
                     position = party[i].transform.position;
                 }
 
-                var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+                //バフをシリアライズ可能な型に変換
+                List<SerializablePokkur.SerializableBuff> buffs = new();
+                var buffInstances = party[i].GetComponents<Buff>();
+                if(buffInstances is not null)
+                {
+                    foreach(var buff in buffInstances)
+                    {
+                        buffs.Add(new SerializablePokkur.SerializableBuff(buff.BuffTimer, buff.Type));
+                    }
+                }
+
+                var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, buffs, parameter.HealthPoint, parameter.MovementSpeed,
                     parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, position, party[i].GetComponent<PokkurController>().IsFollowing);
 
                 data.party.Add(serializable);

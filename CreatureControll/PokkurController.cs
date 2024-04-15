@@ -30,7 +30,7 @@ public class PokkurController : AbstractController
         movementSpeed = creatureStatus.MovementSpeed;
         this.attackSpeed = creatureStatus.AttackSpeed * 0.01f;
         //スキルがある場合、攻撃速度に30％ボーナス
-        if (creatureStatus.Skills.Contains(Skill.Technician)) this.attackSpeed = attackSpeed + 0.3f;
+        Extensions.TecnicianMerit(creatureStatus.Skills, ref this.attackSpeed);
         attackCooldown = ICreature.attackCooldown * (1.0f - (0.5f * attackSpeed));
         maxEnemy = creatureStatus.MaxEnemy;
     }

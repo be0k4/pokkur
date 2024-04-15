@@ -78,12 +78,13 @@ public class DialogueControllerForVeteran : DialogueController
             parameter.Toughness = serialized.toughness;
             parameter.AttackSpeed = serialized.attackSpeed;
             parameter.Guard = serialized.guard;
-            parameter.Skills = serialized.skills;
+            parameter.Skills = serialized.Skills.ToList();
             parameter.PowExp = serialized.powExp;
             parameter.DexExp = serialized.dexExp;
             parameter.ToExp = serialized.toExp;
             parameter.AsExp = serialized.asExp;
             parameter.DefExp = serialized.defExp;
+            //バフと追従は初期化したいので飛ばす
             if (pokkur.layer is not ICreature.layer_npc) pokkur.InitializeNpc();
             this.standby.Add(pokkur);
         }
@@ -103,8 +104,10 @@ public class DialogueControllerForVeteran : DialogueController
             //スタンバイの場合はパーティよりも深い階層にある
             var index = weaponSlotPath.IndexOf('ア');
             weaponSlotPath = weaponSlotPath.Remove(0, index);
+            //バフは預けると切れる
+            List<SerializablePokkur.SerializableBuff> buffs = new();
 
-            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, parameter.HealthPoint, parameter.MovementSpeed,
+            var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, buffs, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position, false);
 
             data.standby.Add(serializable);

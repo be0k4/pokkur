@@ -32,6 +32,7 @@ public class CreatureStatus : MonoBehaviour
     [SerializeField, Tooltip("~.prefabで続くprefabのアドレス 例）pokkur.prefab")] string address;
     [SerializeField, Tooltip("スキルの数"), Range(1, 3)] int skillCount;
     [SerializeField, Tooltip("3つ以内でスキルを設定可能。余った枠はランダムに決定する")] List<Skill> skills = new();
+    List<Buffs> buffs = new();
 
     //経験値
     float powExp;
@@ -96,6 +97,7 @@ public class CreatureStatus : MonoBehaviour
     public float DefExp { get => defExp; set => defExp = value; }
     public string Address { get => address; }
     public List<Skill> Skills { get => skills; set => skills = value; }
+    public List<Buffs> Buffs { get => buffs; }
 
     /// <summary>
     /// 攻撃対象の被ダメージ計算時に呼び出され、経験値を得る。
@@ -106,10 +108,7 @@ public class CreatureStatus : MonoBehaviour
         //2乗するので、差分がマイナスの場合は基本値とする。
         var exp = enemyToughness - power > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - power, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Powerful))
-        {
-            exp = exp * Skill.Powerful.GetValue();
-        }
+        Extensions.GetMoreExp(this.skills, Skill.Powerful, ref exp);
 
         powExp += exp;
 
@@ -128,10 +127,7 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = enemyToughness - dexterity > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - dexterity, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Skilled))
-        {
-            exp = exp * Skill.Skilled.GetValue();
-        }
+        Extensions.GetMoreExp(this.skills, Skill.Skilled, ref exp);
 
         dexExp += exp;
 
@@ -150,10 +146,7 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = damage - toughness > 0 ? Mathf.Max(Mathf.Pow(damage - toughness, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Tough))
-        {
-            exp = exp * Skill.Tough.GetValue();
-        }
+        Extensions.GetMoreExp(this.skills, Skill.Tough, ref exp);
 
         toExp += exp;
 
@@ -172,10 +165,7 @@ public class CreatureStatus : MonoBehaviour
     {
         var exp = enemyAttackSpeed - attackSpeed > 0 ? Mathf.Max(Mathf.Pow(enemyAttackSpeed - attackSpeed, 2), 100) : 100;
 
-        if (this.skills.Contains(Skill.Agile))
-        {
-            exp = exp * Skill.Agile.GetValue();
-        }
+        Extensions.GetMoreExp(this.skills, Skill.Agile, ref exp);
 
         asExp += exp;
 
@@ -196,10 +186,7 @@ public class CreatureStatus : MonoBehaviour
         //防御は成長機会が限られるうえに、敵の攻撃力が上がるほど成功しないので多めに与える
         var exp = Mathf.Pow(damage, 2);
 
-        if (this.skills.Contains(Skill.IronWall))
-        {
-            exp = exp * Skill.IronWall.GetValue();
-        }
+        Extensions.GetMoreExp(this.skills, Skill.IronWall, ref exp);
 
         defExp += exp;
 

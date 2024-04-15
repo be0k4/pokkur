@@ -55,8 +55,10 @@ public class AttackCalculater : MonoBehaviour
         }
 
         //スキルがある場合のダメージ変動
-        if (creatureStatus.Skills.Contains(Skill.Berserker) && creatureStatus.HealthPoint <= creatureStatus.MaxHealthPoint / 2) damage += Skill.Berserker.GetValue();
-        if (creatureStatus.Skills.Contains(Skill.Technician)) damage *= 0.8f;
+        //下ほど優先度が高い
+        Extensions.TechnicianDemerit(creatureStatus.Skills, ref damage);
+        Buff.RedBuff(creatureStatus.Buffs, ref damage);
+        Extensions.BerserkMode(creatureStatus, ref damage);
         return damage;
     }
 
@@ -91,7 +93,7 @@ public class AttackCalculater : MonoBehaviour
 
         var damage = CalculateAttackDamage();
 
-        if (creatureStatus.Skills.Contains(Skill.Brawler)) Herb.Use(gameObject.transform.root.gameObject, damage * Skill.Brawler.GetValue());
+        Extensions.BrawlerMode(creatureStatus.Skills, gameObject.transform.root.gameObject, damage);
 
         other.SendMessage(methodName, damage);
     }

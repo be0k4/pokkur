@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
   m_Name: drop_green
   m_EditorClassIdentifier: 
-  data: 30
+  data: 60
   icon: {fileID: 21300000, guid: ac1d107ff71b6fd4199021bed150fcf1, type: 3}
   prefab: {fileID: 7261369943718715834, guid: 8d0d2d7f281223d42b6f1ce8036ae2b6, type: 3}
-  itemText: "\u7DD1\u306E\u96EB\n\u7D4C\u9A13\u5024\u3092\u7372\u5F97"
+  itemText: "\u7DD1\u306E\u96EB\n60\u79D2\u306E\u9593\u3001\u9632\u5FA1\u6210\u529F\u7387\u306E\u4E0B\u9650\u5024\u309220%\u306B\u3059\u308B"
   address: Drop_green.prefab

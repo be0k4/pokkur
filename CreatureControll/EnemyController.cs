@@ -32,7 +32,7 @@ public class EnemyController : AbstractController, IDataPersistence
     void Start()
     {
         CreatureState = State.Idle;
-        basePosition = new Vector3(transform.position.x, 0, transform.position.z);
+        basePosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
         //ƒpƒ‰ƒ[ƒ^‚Ìæ“¾
         movementSpeed = creatureStatus.MovementSpeed;
         attackSpeed = creatureStatus.AttackSpeed * 0.01f;

@@ -69,17 +69,17 @@ public class SerializablePokkur
         this.position = position;
         this.isFollowing = isFollowing;
     }
+}
 
-    [System.Serializable]
-    public class SerializableBuff
+[System.Serializable]
+public class SerializableBuff
+{
+    public float buffTimer;
+    public Buffs type;
+
+    public SerializableBuff(float buffTimer, Buffs type)
     {
-        public float buffTimer;
-        public Buffs type;
-
-        public SerializableBuff(float buffTimer, Buffs type)
-        {
-            this.buffTimer = buffTimer;
-            this.type = type;
-        }
+        this.buffTimer = buffTimer;
+        this.type = type;
     }
 }

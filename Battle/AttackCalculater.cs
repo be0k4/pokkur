@@ -57,7 +57,7 @@ public class AttackCalculater : MonoBehaviour
         //スキルがある場合のダメージ変動
         //下ほど優先度が高い
         Extensions.TechnicianDemerit(creatureStatus.Skills, ref damage);
-        Buff.RedBuff(creatureStatus.Buffs, ref damage);
+        Buff.DamageBuff(creatureStatus.Buffs, ref damage);
         Extensions.BerserkMode(creatureStatus, ref damage);
         return damage;
     }

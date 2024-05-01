@@ -52,13 +52,32 @@ public class Buff : MonoBehaviour
     /// <summary>
     /// 攻撃力を上昇させる
     /// </summary>
-    public static void RedBuff(List<Buffs> buffs, ref float damage)
+    public static void DamageBuff(List<Buffs> buffs, ref float damage)
     {
-        if (buffs.Contains(Buffs.Red)) damage *= 1.3f;
+        if (buffs.Contains(Buffs.ダメージ)) damage *= 1.3f;
+    }
+
+    /// <summary>
+    /// 防御成功率の下限を20％にする
+    /// </summary>
+    public static void GuardBuff(List<Buffs> buffs, ref int guard)
+    {
+        if (buffs.Contains(Buffs.防御)) guard = Mathf.Max(20, guard);
+    }
+
+    /// <summary>
+    /// ダメージカット率を10％上昇(上限75%を無視)
+    /// </summary>
+    public static void TougnessBuff(List<Buffs> buffs, ref float toughness)
+    {
+        if (buffs.Contains(Buffs.頑丈)) toughness += 0.1f;
     }
 }
 
 public enum Buffs
 {
-    Red
+    //バフと関連するステータス名
+    ダメージ,
+    防御,
+    頑丈
 }

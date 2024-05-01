@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b70de6b68c82c3f488a4cdc9abd80ef6, type: 3}
+  m_Name: drop_black
+  m_EditorClassIdentifier: 
+  data: 0
+  icon: {fileID: 21300000, guid: 5562776a5857330429a435efb60dd853, type: 3}
+  prefab: {fileID: 5316482396766680367, guid: d1a4d540520387d42a725746c9d7b008, type: 3}
+  itemText: "\u9ED2\u3044\u96EB\n\u30B9\u30AD\u30EB\u306B\u7A7A\u304D\u304C\u3042\u308B\u5834\u5408\u3001\u6700\u59273\u3064\u307E\u3067\u30E9\u30F3\u30C0\u30E0\u306B\u30B9\u30AD\u30EB\u3092\u8FFD\u52A0\u3059\u308B\n\u30B9\u30AD\u30EB\u30923\u3064\u6240\u6301\u3057\u3066\u3044\u308B\u5834\u5408\u306F\u4F55\u3082\u8D77\u3053\u3089\u306A\u3044"
+  address: Drop_black.prefab

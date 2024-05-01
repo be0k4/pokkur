@@ -1,8 +1,10 @@
 using Cinemachine;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.AI;
 
 public class PrefabInitializer : EditorWindow
@@ -98,7 +100,7 @@ public class PrefabInitializer : EditorWindow
         }
     }
 
-    async void InitializePlayerObject()
+    void InitializePlayerObject()
     {
         //コンポーネントをアタッチ
         prefab.tag = ICreature.player;
@@ -111,14 +113,12 @@ public class PrefabInitializer : EditorWindow
         //子オブジェクトを追加
         string[] prefabChildren = new string[] { "CM FreeLook.prefab", "HitBox.prefab", "LocalUI.prefab", "SearchAreaCollider.prefab" };
 
-        foreach (string address in prefabChildren)
+        foreach (var address in prefabChildren)
         {
-            var handle = Addressables.LoadAssetAsync<GameObject>(address);
-            var child = await handle.Task;
-            var instance = Instantiate(child, prefab.transform);
+            var asset = LoadPrefabChildByAddress<GameObject>(address);
+            var instance = Instantiate(asset, prefab.transform);
             //(Clone)を名前から消す
             instance.name = instance.name.Remove(instance.name.IndexOf("("));
-            Addressables.Release(handle);
         }
 
         //共通部分はコンポーネントの値も設定
@@ -170,7 +170,7 @@ public class PrefabInitializer : EditorWindow
     /// <summary>
     /// エネミーprefabを作成する。
     /// </summary>
-    async void InitializeEnemyObject()
+    void InitializeEnemyObject()
     {
         //コンポーネントをアタッチ
         prefab.tag = ICreature.enemy;
@@ -183,13 +183,11 @@ public class PrefabInitializer : EditorWindow
         //子オブジェクトを追加
         string[] prefabChildren = new string[] { "HitBox.prefab", "LocalUI.prefab", "SearchAreaCollider.prefab" };
 
-        foreach (string address in prefabChildren)
+        foreach (var address in prefabChildren)
         {
-            var handle = Addressables.LoadAssetAsync<GameObject>(address);
-            var child = await handle.Task;
-            var instance = Instantiate(child, prefab.transform);
+            var asset = LoadPrefabChildByAddress<GameObject>(address);
+            var instance = Instantiate(asset, prefab.transform);
             instance.name = instance.name.Remove(instance.name.IndexOf("("));
-            Addressables.Release(handle);
         }
 
         //共通部分はコンポーネントの値も設定
@@ -227,7 +225,7 @@ public class PrefabInitializer : EditorWindow
     /// <summary>
     /// 取得可能アイテムとしての武器prefabを作成する。
     /// </summary>
-    async void InitializeWeapon()
+    void InitializeWeapon()
     {
         //タグとレイヤーを設定
         prefab.layer = ICreature.layer_weapon;
@@ -243,11 +241,9 @@ public class PrefabInitializer : EditorWindow
         if (isUniqueWeapon is true) return;
         //itemColliderをインスタンス化
         //インスタンス化して子オブジェクトに設定
-        var handle = Addressables.LoadAssetAsync<GameObject>("ItemCollider.prefab");
-        var itemCollider = await handle.Task;
-        var instance = Instantiate(itemCollider, prefab.transform);
+        var asset = LoadPrefabChildByAddress<GameObject>("ItemCollider.prefab");
+        var instance = Instantiate(asset, prefab.transform);
         instance.name = instance.name.Remove(instance.name.IndexOf("("));
-        Addressables.Release(handle);
     }
 
     /// <summary>
@@ -264,6 +260,25 @@ public class PrefabInitializer : EditorWindow
         collider.enabled = false;
         //attackCalculator
         prefab.AddComponent<AttackCalculater>();
+    }
+
+    /// <summary>
+    /// PrefabChildグループの中からアドレスでアセットをロードする
+    /// </summary>
+    public T LoadPrefabChildByAddress<T>(string address) where T : UnityEngine.Object
+    {
+        var setting = AddressableAssetSettingsDefaultObject.Settings;
+        var group = setting.FindGroup(e => e.Name.Contains("PrefabChild"));
+        List<AddressableAssetEntry> entries = new();
+        group.GatherAllAssets(entries, true, false, false);
+        foreach (var entry in entries)
+        {
+            if (entry.address == address)
+            {
+                return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(entry.guid));
+            }
+        }
+        return null;
     }
 
     enum PrefabType

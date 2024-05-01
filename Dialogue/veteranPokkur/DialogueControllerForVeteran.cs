@@ -105,7 +105,7 @@ public class DialogueControllerForVeteran : DialogueController
             var index = weaponSlotPath.IndexOf('ÉA');
             weaponSlotPath = weaponSlotPath.Remove(0, index);
             //ÉoÉtÇÕóaÇØÇÈÇ∆êÿÇÍÇÈ
-            List<SerializablePokkur.SerializableBuff> buffs = new();
+            List<SerializableBuff> buffs = new();
 
             var serializable = new SerializablePokkur(name, parameter.Power, parameter.Dexterity, parameter.Toughness, parameter.AttackSpeed, parameter.Guard, parameter.Skills, buffs, parameter.HealthPoint, parameter.MovementSpeed,
                 parameter.PowExp, parameter.DexExp, parameter.ToExp, parameter.AsExp, parameter.DefExp, pokkurAddress: parameter.Address, weaponAddress, weaponSlotPath, pokkur.transform.position, false);

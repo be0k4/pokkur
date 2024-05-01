@@ -30,7 +30,7 @@ public class CreatureStatus : MonoBehaviour
     [Header("味方専用項目")]
     [SerializeField, Tooltip("UI表示用アイコン")] Sprite icon;
     [SerializeField, Tooltip("~.prefabで続くprefabのアドレス 例）pokkur.prefab")] string address;
-    [SerializeField, Tooltip("スキルの数"), Range(1, 3)] int skillCount;
+    [SerializeField, Tooltip("仲間にしたときに獲得するスキルの上限数"), Range(1, 3)] int skillCount;
     [SerializeField, Tooltip("3つ以内でスキルを設定可能。余った枠はランダムに決定する")] List<Skill> skills = new();
     List<Buffs> buffs = new();
 
@@ -104,8 +104,8 @@ public class CreatureStatus : MonoBehaviour
     /// </summary>
     public void AddPowExp(float enemyToughness)
     {
-        //敵とのステータス差に応じてもらえる経験は多くなる。ステータス差が10以下では基本値の100しかもらえない。
-        //2乗するので、差分がマイナスの場合は基本値とする。
+        //敵とのステータス差に応じてもらえる経験は多くなる。ステータス差が10以下では固定値の100しかもらえない。
+        //2乗するので、差分がマイナスの場合は固定値とする。
         var exp = enemyToughness - power > 0 ? Mathf.Max(Mathf.Pow(enemyToughness - power, 2), 100) : 100;
 
         Extensions.GetMoreExp(this.skills, Skill.Powerful, ref exp);
@@ -200,8 +200,9 @@ public class CreatureStatus : MonoBehaviour
 
     /// <summary>
     /// 重複を許さず、余ったスキルの枠にランダムにスキルを追加する。
+    /// <para>引数をtrueにした場合、スキルカウントを無視してランダムなスキルを追加</para>
     /// </summary>
-    public void SetRandomSkills()
+    public void SetRandomSkills(bool ignoreSkillCount)
     {
         var pool = (Skill[])Enum.GetValues(typeof(Skill));
         var list = new HashSet<Skill>();
@@ -211,14 +212,29 @@ public class CreatureStatus : MonoBehaviour
             list.Add(skill);
         }
 
-        //最大3回抽選する
-        for (var i = 0; i < skillCount - this.skills.Count; i++)
+        if (ignoreSkillCount)
         {
+            //最大3回抽選する
+            for (var i = 0; i < 3 - this.skills.Count; i++)
+            {
 
-            //プールの中でランダムなインデックスを取得
-            var index = UnityEngine.Random.Range(0, pool.Length);
-            //重複した場合は何も入らない
-            list.Add(pool[index]);
+                //プールの中でランダムなインデックスを取得
+                var index = UnityEngine.Random.Range(0, pool.Length);
+                //重複した場合は何も入らない
+                list.Add(pool[index]);
+            }
+        }
+        else
+        {
+            //スキルカウントを参照
+            for (var i = 0; i < skillCount - this.skills.Count; i++)
+            {
+
+                //プールの中でランダムなインデックスを取得
+                var index = UnityEngine.Random.Range(0, pool.Length);
+                //重複した場合は何も入らない
+                list.Add(pool[index]);
+            }
         }
 
         this.skills = list.ToList();
@@ -227,7 +243,6 @@ public class CreatureStatus : MonoBehaviour
 }
 
 //耐性
-//追加時にExtensionでの追加も忘れずに
 public enum Resistance
 {
     Weak,
@@ -236,7 +251,6 @@ public enum Resistance
 }
 
 //スキル
-//追加時にExtensionでの追加も忘れずに
 public enum Skill
 {
     Powerful,

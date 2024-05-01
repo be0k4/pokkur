@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,7 +11,10 @@ using UnityEngine.UI;
 public class SaveSlotsMenu : MonoBehaviour
 {
     [SerializeField] MainMenu mainMenu;
+
+    [Header("ウィンドウ")]
     [SerializeField] RectTransform confirmWindow;
+    [SerializeField] RectTransform inputNameWindow;
 
     [Header("ボタン")]
     [SerializeField] Button backButton;
@@ -71,9 +75,20 @@ public class SaveSlotsMenu : MonoBehaviour
                 }
             }
 
-            DataPersistenceManager.instance.CreateNewData(saveSlot.ProfileId);
+            //ここで名前を入力させる
+            //インプットネームウィンドウを表示
+            //セーブスロットを無効化
+            //入力待機
+            //入力された名前をcreateNewdataに渡す
+            inputNameWindow.gameObject.SetActive(true);
+            string name = null;
+            inputNameWindow.GetComponentInChildren<TMP_InputField>().onEndEdit.AddListener(text => name = text);
+            await UniTask.WaitWhile(() => name is null, PlayerLoopTiming.Update, token);
+            inputNameWindow.GetComponentInChildren<TMP_InputField>().text = "";
+            inputNameWindow.gameObject.SetActive(false);
+            DataPersistenceManager.instance.CreateNewData(saveSlot.ProfileId, name);
             DataPersistenceManager.instance.SaveGame();
-            //ニューゲームでは遷移先は最初のシーン固定
+            //遷移先は最初のシーン
             var handle = SceneManager.LoadSceneAsync("Forest");
         }
     }
@@ -155,6 +170,10 @@ public class SaveSlotsMenu : MonoBehaviour
         this.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// 全てのボタンを引数の状態に変更
+    /// </summary>
+    /// <param name="reverse">trueならアクティブ</param>
     public void ReverseMenuButtons(bool reverse)
     {
         foreach (var saveSlot in this.saveSlots)

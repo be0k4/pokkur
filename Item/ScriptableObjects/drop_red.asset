@@ -15,5 +15,5 @@ MonoBehaviour:
   data: 60
   icon: {fileID: 21300000, guid: ea142f7f21c35b04fb2ddf11eec35a91, type: 3}
   prefab: {fileID: 8969558213733966544, guid: bd0df6a6f2bd47243bcca404b2ba3ad5, type: 3}
-  itemText: "\u8D64\u3044\u96EB\n60\u79D2\u306E\u9593\u653B\u6483\u529B\u3092\u308F\u305A\u304B\u306B\u4E0A\u6607"
+  itemText: "\u8D64\u3044\u96EB\n60\u79D2\u306E\u9593\u3001\u653B\u6483\u529B\u3092\u308F\u305A\u304B\u306B\u4E0A\u6607"
   address: Drop_red.prefab

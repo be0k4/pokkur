@@ -828,7 +828,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //OnTriggerが作動しないようにSetActive(false)ではなく完全に消す。消すことでDialogueController内のOnDisable()でプレイアブルキャラになる
         Destroy(pokkur.GetComponent<DialogueController>());
         //スキルの抽選
-        pokkur.GetComponentInChildren<CreatureStatus>().SetRandomSkills();
+        pokkur.GetComponentInChildren<CreatureStatus>().SetRandomSkills(false);
 
         //どこに加入させるかで分岐する
         if (toParty)
@@ -1188,13 +1188,13 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 }
 
                 //バフをシリアライズ可能な型に変換
-                List<SerializablePokkur.SerializableBuff> buffs = new();
+                List<SerializableBuff> buffs = new();
                 var buffInstances = party[i].GetComponents<Buff>();
                 if(buffInstances is not null)
                 {
                     foreach(var buff in buffInstances)
                     {
-                        buffs.Add(new SerializablePokkur.SerializableBuff(buff.BuffTimer, buff.Type));
+                        buffs.Add(new SerializableBuff(buff.BuffTimer, buff.Type));
                     }
                 }
 

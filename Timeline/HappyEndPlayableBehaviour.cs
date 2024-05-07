@@ -15,8 +15,10 @@ public class HappyEndPlayableBehaviour : PlayableBehaviour
     {
         //BGMを停止
         await BGMAudioManager.instance.SwapTrack(null);
-        GameManager.invalid = true;
-        //Uiを非表示
+        GameManager.Invalid = true;
+        //タイムスケールを戻す
+        Time.timeScale = 1;
+        //UIを非表示
         mainCamera.cullingMask &= ~(1 << 5);
     }
 
@@ -24,7 +26,7 @@ public class HappyEndPlayableBehaviour : PlayableBehaviour
     public override void OnGraphStop(Playable playable)
     {
         SceneManager.LoadSceneAsync(MainMenu.mainmenu);
-        GameManager.invalid = false;
+        GameManager.Invalid = false;
     }
 
     // Called when the state of the playable is set to Play

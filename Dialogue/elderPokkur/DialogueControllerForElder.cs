@@ -34,15 +34,15 @@ public class DialogueControllerForElder : DialogueController
     public override async void Interact()
     {
         //二重会話を防ぐ
-        if (GameManager.invalid) return;
+        if (GameManager.Invalid) return;
         if (interactable is false) return;
         if (CheckPartyIsReady() is false) return;
 
         //オーブを持っている場合はそれ用の会話をする
-        if (GameManager.inventory.Any(e => e is Orb))
+        if (GameManager.Inventory.Any(e => e is Orb))
         {
             //今から渡すオーブの種類を列挙型で取得
-            Orb orb = (Orb)GameManager.inventory.First(e => e is Orb);
+            Orb orb = (Orb)GameManager.Inventory.First(e => e is Orb);
             string type = orb.Type switch
             {
                 Orb.Orbs.Blue => "ブルー",
@@ -90,7 +90,7 @@ public class DialogueControllerForElder : DialogueController
                 var collectedOrb = collectedOrbs.First(e => e.Type == orb.Type);
                 collectedOrb.gameObject.SetActive(true);
                 collectedOrb.IsCorrected = false;
-                GameManager.inventory.Remove(orb);
+                GameManager.Inventory.Remove(orb);
             }
 
         }

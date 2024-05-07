@@ -7,7 +7,7 @@ public class SkillDrop : AbstractItem
         //Œø‰Ê‰¹‚ð—¬‚·
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
         var clone = (SkillDrop)this.MemberwiseClone();
-        GameManager.inventory.Add(clone);
+        GameManager.Inventory.Add(clone);
         Destroy(gameObject);
         isCorrected = true;
     }

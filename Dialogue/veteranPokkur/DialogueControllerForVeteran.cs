@@ -19,7 +19,7 @@ public class DialogueControllerForVeteran : DialogueController
 
     public override async void Interact()
     {
-        if (GameManager.invalid) return;
+        if (GameManager.Invalid) return;
         if (interactable is false) return;
         if (CheckPartyIsReady() is false) return;
 

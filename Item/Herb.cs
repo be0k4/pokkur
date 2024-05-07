@@ -7,11 +7,11 @@ public class Herb : AbstractItem
 {
     public override void Collect()
     {
-        if (GameManager.inventory.Count < GameManager.inventorySize)
+        if (GameManager.Inventory.Count < GameManager.inventorySize)
         {
             SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
             var clone = (Herb)this.MemberwiseClone();
-            GameManager.inventory.Add(clone);
+            GameManager.Inventory.Add(clone);
             Destroy(gameObject);
             isCorrected = true;
         }

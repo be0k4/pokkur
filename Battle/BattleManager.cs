@@ -31,7 +31,7 @@ public class BattleManager : MonoBehaviour
     async void Start()
     {
         //ロード待機
-        await UniTask.WaitWhile(() => GameManager.invalid);
+        await UniTask.WaitWhile(() => GameManager.Invalid);
         //HPバーの設定
         hpSlider = localUI.GetComponentInChildren<Slider>(true);
         if (creatureStatus.MaxHealthPoint < creatureStatus.HealthPoint) Debug.LogError($"最大HPが現在HPより小さいです。修正してください。");

@@ -74,7 +74,7 @@ public class DialogueController : AbstractInteractable, IDataPersistence
     public override async void Interact()
     {
         //二重に会話するのを防ぐ
-        if (GameManager.invalid) return;
+        if (GameManager.Invalid) return;
         //近くにいないと会話できない
         if (interactable is false) return;
 

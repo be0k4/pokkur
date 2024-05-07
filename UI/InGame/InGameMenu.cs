@@ -37,6 +37,9 @@ public class InGameMenu : MonoBehaviour
     ConfigData configData;
     DataFileHandler dataHandler;
 
+    //現在のタイムスケール
+    int timeScale;
+
     void Awake()
     {
         //ロード
@@ -88,8 +91,8 @@ public class InGameMenu : MonoBehaviour
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         DeactiveMainMenu();
         //操作可能にする
-        GameManager.invalid = false;
-        Time.timeScale = 1;
+        GameManager.Invalid = false;
+        Time.timeScale = timeScale;
     }
 
     public void OnOptionClicked()
@@ -100,9 +103,12 @@ public class InGameMenu : MonoBehaviour
     }
     public void ActivateMainMenu()
     {
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         this.mainMenu.gameObject.SetActive(true);
+        timeScale = (int)Time.timeScale;
         Time.timeScale = 0;
-        GameManager.invalid = true;
+        GameManager.Invalid = true;
+
     }
 
     void DeactiveMainMenu()
@@ -116,10 +122,10 @@ public class InGameMenu : MonoBehaviour
         var value = await ConfirmWindow();
         if (value is 1) return;
         //操作可能にする
-        GameManager.invalid = false;
+        GameManager.Invalid = false;
         Time.timeScale = 1;
         //インゲーム中に使用するstatic変数を初期化する
-        GameManager.isInDungeon = null;
+        GameManager.IsInDungeon = null;
         await SceneManager.LoadSceneAsync(MainMenu.mainmenu);
     }
 

@@ -20,9 +20,23 @@ using Random = UnityEngine.Random;
 public class GameManager : MonoBehaviour, IDataPersistence
 {
     //インベントリ
-    public static List<ICollectable> inventory = new();
+    public static List<ICollectable> Inventory { get; set; } = new();
     //インベントリのサイズ
     public const int inventorySize = 35;
+    //ゲームオーバーとなる日数
+    public const int gameOver = 7;
+
+    /// <summary>
+    /// UI操作の可・不可を切り替えるフラグ
+    /// <para>trueの場合操作不可</para>
+    /// </summary>
+    public static bool Invalid { get; set; }
+
+    /// <summary>
+    /// ダンジョンにいるかどうかのフラグ
+    /// <para>ゲーム開始時はnullで初回ロード時に初期化</para>
+    /// </summary>
+    public static bool? IsInDungeon { get; set; } = null;
 
     //現在操作中のキャラクター:初期値はパーティの先頭
     public static GameObject activeObject;
@@ -30,23 +44,14 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //現在操作中のキャラクターのカメラ：初期値はパーティの先頭
     CinemachineFreeLook activeCamera;
 
-    /// <summary>
-    /// <para>trueの場合UI操作ができない。何らかの操作によってUIを表示中は基本true</para>
-    /// </summary>
-    public static bool invalid = true;
-
-    /// <summary>
-    /// ダンジョンにいるかどうか
-    /// ゲーム開始時はnullで初回ロード時に初期化
-    /// </summary>
-    public static bool? isInDungeon = null;
-
     [Header("パーティ関連")]
     //追従対象
     [SerializeField] GameObject followingTargets;
     //パーティ管理を行うリスト
     List<GameObject> party = new();
-    //パーティとスタンバイの管理を行うオブジェクト
+    //IEnumerableで公開
+    public IEnumerable<GameObject> Party { get => party; }
+    //ポックルの管理を行うオブジェクト
     [SerializeField] DialogueControllerForVeteran partymanager;
 
     [Header("インベントリ関連")]
@@ -83,6 +88,8 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] InGameMenu inGameMenu;
     //日付の表示
     [SerializeField] TextMeshProUGUI dayText;
+    //一時停止のパネル
+    [SerializeField] RectTransform pausePanel;
 
     [Header("ライティング関連")]
     [SerializeField, Tooltip("スカイボックス用マテリアル")] Material daySky;
@@ -102,26 +109,22 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [SerializeField] float inGameHours;
     //ゲーム内で経過した日にち
     [SerializeField] int inGamedays;
-    //洞窟内ライトの高さ補正
-    Vector3 offset = new Vector3(0, 2, 0);
     //太陽の角度
     Vector3 lightEulerAngle = Vector3.zero;
     //天候の廃棄を譲渡されるデリゲート
     event Action weatherChangedTrigger;
     //バッドエンディングを再生するデリゲート
     public event Action badEndTrigger;
-    //ゲームオーバーとなる日数
-    public const int gameOver = 7;
 
     //ダイナミックフォント
-    [SerializeField]TMP_FontAsset dynamicFont;
+    [SerializeField] TMP_FontAsset dynamicFont;
     //ロード時のアセットへの参照をキャッシュするリスト
     List<AsyncOperationHandle> handles = new();
+    //現在のタイムスケール
+    int timeScale = 1;
 
     //3：地面 6：プレイヤー 8 : プレイヤーヒットボックス 9：エネミーヒットボックス 14:アイテム 15:npc
     int layerMask = 1 << 3 | 1 << 6 | 1 << 8 | 1 << 9 | 1 << 14 | 1 << 15;
-
-    public IEnumerable<GameObject> Party { get => party; }
 
     async UniTask Start()
     {
@@ -130,7 +133,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //乱数の初期化
         Random.InitState(DateTime.Now.Second);
         //ロードを待機
-        await UniTask.WaitWhile(() => invalid);
+        await UniTask.WaitWhile(() => Invalid);
         //天候の初期化とBGMの再生
         switch (weatherState)
         {
@@ -165,7 +168,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
     void Update()
     {
-        if (invalid) return;
+        if (Invalid) return;
 
         ManageEnviroment();
 
@@ -181,7 +184,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             UpdateParty();
         }
 
-        if (Input.GetKeyDown(KeyCode.Tab)) Inventory();
+        if (Input.GetKeyDown(KeyCode.Tab)) ManageInventory();
 
         if (Input.GetKeyDown(KeyCode.Escape)) inGameMenu.ActivateMainMenu();
     }
@@ -539,7 +542,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     {
         confirmWindow.gameObject.SetActive(true);
         //操作不能
-        invalid = true;
+        Invalid = true;
         var buttons = confirmWindow.GetComponentsInChildren<Button>();
         //効果音の追加
         foreach (var button in buttons)
@@ -550,14 +553,14 @@ public class GameManager : MonoBehaviour, IDataPersistence
         }
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         confirmWindow.gameObject.SetActive(false);
-        invalid = false;
+        Invalid = false;
         return value;
     }
 
     /// <summary>
     /// インベントリ表示、非表示、アイテムや装備の反映
     /// </summary>
-    private void Inventory()
+    private void ManageInventory()
     {
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
 
@@ -575,7 +578,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         if (isActive)
         {
             //一時停止
-            Time.timeScale = 0;
+            PauseTimeScale();
 
             //登録された消費アイテムを初期化
             foreach (var e in iconFrames)
@@ -586,9 +589,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //インベントリウィンドウ
             for (var i = 0; i < inventorySize; i++)
             {
-                if (i < inventory.Count())
+                if (i < Inventory.Count())
                 {
-                    icons[i].Item = inventory[i];
+                    icons[i].Item = Inventory[i];
                     Image image = icons[i].GetComponent<Image>();
                     image.color = new Color32(255, 255, 255, 255);
                     image.sprite = icons[i].Item.GetItemData().icon;
@@ -632,7 +635,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //インベントリウィンドウを実際のリストと連携
             icons.RemoveAll((e) => e.Item is null);
             //自動でソートする
-            inventory = icons.Select((e) => e.Item).ToList().OrderByDescending(e => e).ThenBy(e => e.GetItemData().itemText).ToList(); ;
+            Inventory = icons.Select((e) => e.Item).ToList().OrderByDescending(e => e).ThenBy(e => e.GetItemData().itemText).ToList(); ;
 
             //装備品ウィンドウをpokkurに反映
             var equipmentFrames = equipmentWindow.GetComponentsInChildren<EquipmentFrame>().ToList().Where(e => e.Changed).Select(e => new { e.Index, e.Item }).ToList();
@@ -691,7 +694,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 if (total > 0) Herb.Use(party[e.Index], total);
             }
 
-            Time.timeScale = 1;
+            ResetTimeScale();
 
         }
     }
@@ -706,10 +709,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //戻り値は分岐が無い場合もあるので適当な値を入れておく
         int value = 100;
         //一時停止
-        Time.timeScale = 0;
+        PauseTimeScale();
         dialogueWindow.gameObject.SetActive(true);
         //操作不能
-        invalid = true;
+        Invalid = true;
         var textUI = dialogueWindow.GetComponentInChildren<TextMeshProUGUI>();
         //改行でテキストを区切る
         var dialogueTexts = textFile.text.Split("\r\n").ToList();
@@ -773,9 +776,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
             SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         }
         //再生
-        Time.timeScale = 1;
+        Invalid = false;
+        ResetTimeScale();
         dialogueWindow.gameObject.SetActive(false);
-        invalid = false;
         return value;
     }
 
@@ -813,10 +816,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         //リクルート成功
         //InputFieldを表示し、入力が完了するまで待つ
-        Time.timeScale = 0;
+        PauseTimeScale();
         inputNameWindow.gameObject.SetActive(true);
         //操作不能
-        invalid = true;
+        Invalid = true;
         string name = null;
         inputNameWindow.GetComponent<TMP_InputField>().onEndEdit.AddListener(text => name = text);
         await UniTask.WaitWhile(() => name is null, PlayerLoopTiming.Update, token);
@@ -851,11 +854,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //暗転
         BlackOut();
         await UniTask.Delay(500, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, token);
-        invalid = false;
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.recruit);
 
         UpdateParty();
-        Time.timeScale = 1;
+        Invalid = false;
+        ResetTimeScale();
         return true;
     }
 
@@ -881,10 +884,10 @@ public class GameManager : MonoBehaviour, IDataPersistence
     {
         //パーティ3、待機所6でドラッグ可能なUIを表示。
         //パーティと待機所を参照してUIにpokkurのデータを保持させる。
-        Time.timeScale = 0;
+        PauseTimeScale();
         managementWindow.gameObject.SetActive(true);
         //操作不能
-        invalid = true;
+        Invalid = true;
         removeArea.raycastTarget = true;
         var partyIcons = managementWindow.Find("Party").GetComponentsInChildren<ManagementIcon>();
         var standbyIcons = managementWindow.Find("Standby").GetComponentsInChildren<ManagementIcon>();
@@ -949,7 +952,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         //0はConfirm、1はCancel
         var value = await UniTask.WhenAny(buttons[0].OnClickAsync(token), buttons[1].OnClickAsync(token));
         managementWindow.gameObject.SetActive(false);
-        invalid = false;
+        Invalid = false;
         removeArea.raycastTarget = false;
 
         //キャンセル
@@ -957,7 +960,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             //削除候補リストを空にして終了
             removeArea.GetComponent<RemoveArea>().CandidateList.Clear();
-            Time.timeScale = 1;
+            ResetTimeScale();
             return;
         }
 
@@ -975,7 +978,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
             if (value is 1)
             {
                 removeArea.GetComponent<RemoveArea>().Remove(false);
-                Time.timeScale = 1;
+                ResetTimeScale();
                 return;
             }
             //削除を行う
@@ -1029,13 +1032,57 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 if (party[i].layer is not ICreature.layer_player) party[i].InitializePokkur();
             }
         }
-        Time.timeScale = 1;
+        ResetTimeScale();
+    }
+
+    /// <summary>
+    /// 一時停止
+    /// </summary>
+    public void PauseTimeScale()
+    {
+        if (Invalid) return;
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
+        pausePanel.gameObject.SetActive(true);
+        Time.timeScale = 0;
+    }
+
+    /// <summary>
+    /// 通常速度
+    /// </summary>
+    public void SetTimeScaleDefault()
+    {
+        if (Invalid) return;
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
+        timeScale = 1;
+        pausePanel.gameObject.SetActive(false);
+        Time.timeScale = timeScale;
+    }
+
+    /// <summary>
+    /// 二倍速
+    /// </summary>
+    public void SetTimeScale2Times()
+    {
+        if (Invalid) return;
+        SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
+        timeScale = 2;
+        pausePanel.gameObject.SetActive(false);
+        Time.timeScale = timeScale;
+    }
+
+    /// <summary>
+    /// 元のタイムスケールに戻す
+    /// </summary>
+    public void ResetTimeScale()
+    {
+        pausePanel.gameObject.SetActive(false);
+        Time.timeScale = timeScale;
     }
 
     public async void LoadData(SaveData data)
     {
         //ロード開始
-        invalid = true;
+        Invalid = true;
 
         try
         {
@@ -1045,26 +1092,26 @@ public class GameManager : MonoBehaviour, IDataPersistence
             //環境
             //タイトルからロードする際は、isInDungeonが初期化されてnullになっているので、ロード時に初期化する
             //インゲーム中はstatic変数なのでシーンをまたいで値が保存される
-            if (isInDungeon is null) isInDungeon = data.isInDungeon;
+            if (IsInDungeon is null) IsInDungeon = data.isInDungeon;
             this.inGameHours = data.inGameHours;
             this.inGamedays = data.inGamedays;
-            this.weatherState = (bool)isInDungeon ? Weather.Dungeon : data.weatherState;
+            this.weatherState = (bool)IsInDungeon ? Weather.Dungeon : data.weatherState;
 
             //インベントリ
             //アセットへの参照はシーン毎に更新(シーンを切り替えるタイミングで参照をリリース)
-            inventory.Clear();
+            Inventory.Clear();
             foreach (var address in data.inventory)
             {
                 var handle = Addressables.LoadAssetAsync<GameObject>(address);
                 //参照をキャッシュしておく
                 handles.Add(handle);
                 var asset = await handle.Task;
-                inventory.Add(asset.GetComponentInChildren<ICollectable>());
+                Inventory.Add(asset.GetComponentInChildren<ICollectable>());
             }
 
             //ダンジョン内の場合の開始位置
             List<Vector3> startPositions = null;
-            if ((bool)isInDungeon)
+            if ((bool)IsInDungeon)
             {
                 var startPosition = GameObject.FindGameObjectWithTag("Start");
                 startPositions = startPosition.GetComponentsInChildren<Transform>().Select(e => e.position).ToList();
@@ -1134,7 +1181,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         }
 
         //ロード完了
-        invalid = false;
+        Invalid = false;
     }
 
     public void SaveData(SaveData data)
@@ -1143,11 +1190,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             data.inGameHours = this.inGameHours;
             data.inGamedays = this.inGamedays;
-            data.weatherState = (bool)isInDungeon ? data.weatherState : this.weatherState;
-            data.isInDungeon = (bool)isInDungeon;
+            data.weatherState = (bool)IsInDungeon ? data.weatherState : this.weatherState;
+            data.isInDungeon = (bool)IsInDungeon;
 
             data.inventory.Clear();
-            foreach (var item in inventory)
+            foreach (var item in Inventory)
             {
                 var address = item.GetItemData().address;
                 data.inventory.Add(address);
@@ -1170,7 +1217,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
                 //ダンジョン内と外で保存する地点が異なる
                 Vector3 position;
-                if ((bool)isInDungeon)
+                if ((bool)IsInDungeon)
                 {
                     try
                     {
@@ -1190,9 +1237,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 //バフをシリアライズ可能な型に変換
                 List<SerializableBuff> buffs = new();
                 var buffInstances = party[i].GetComponents<Buff>();
-                if(buffInstances is not null)
+                if (buffInstances is not null)
                 {
-                    foreach(var buff in buffInstances)
+                    foreach (var buff in buffInstances)
                     {
                         buffs.Add(new SerializableBuff(buff.BuffTimer, buff.Type));
                     }

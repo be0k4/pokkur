@@ -25,7 +25,7 @@ public class PokkurController : AbstractController
     async void Start()
     {
         //ロード待機
-        await UniTask.WaitWhile(() => GameManager.invalid);
+        await UniTask.WaitWhile(() => GameManager.Invalid);
         //パラメータの取得
         movementSpeed = creatureStatus.MovementSpeed;
         this.attackSpeed = creatureStatus.AttackSpeed * 0.01f;

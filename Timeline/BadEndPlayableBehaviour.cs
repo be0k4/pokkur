@@ -16,7 +16,9 @@ public class BadEndPlayableBehaviour : PlayableBehaviour
         //BGMを停止
         await BGMAudioManager.instance.SwapTrack(null);
         //操作できなくする
-        GameManager.invalid = true;
+        GameManager.Invalid = true;
+        //タイムスケールを戻す
+        UnityEngine.Time.timeScale = 1;
         //UIを非表示
         mainCamera.cullingMask &= ~(1 << 5);
     }
@@ -25,7 +27,7 @@ public class BadEndPlayableBehaviour : PlayableBehaviour
     public override void OnGraphStop(Playable playable)
     {
         SceneManager.LoadSceneAsync(MainMenu.mainmenu);
-        GameManager.invalid = false;
+        GameManager.Invalid = false;
     }
 
     // Called when the state of the playable is set to Play

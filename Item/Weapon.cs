@@ -20,11 +20,11 @@ public class Weapon : MonoBehaviour, ICollectable
     }
     public void Collect()
     {
-        if (GameManager.inventory.Count < GameManager.inventorySize)
+        if (GameManager.Inventory.Count < GameManager.inventorySize)
         {
             SEAudioManager.instance.PlaySE(SEAudioManager.instance.lift);
             var clone = (Weapon)this.MemberwiseClone();
-            GameManager.inventory.Add(clone);
+            GameManager.Inventory.Add(clone);
             Destroy(gameObject);
             isCorrected = true;
         }

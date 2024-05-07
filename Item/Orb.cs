@@ -12,11 +12,11 @@ public class Orb : MonoBehaviour, ICollectable
 
     public void Collect()
     {
-        if (GameManager.inventory.Count < GameManager.inventorySize)
+        if (GameManager.Inventory.Count < GameManager.inventorySize)
         {
             SEAudioManager.instance.PlaySE(SEAudioManager.instance.recruit);
             var clone = (Orb)this.MemberwiseClone();
-            GameManager.inventory.Add(clone);
+            GameManager.Inventory.Add(clone);
             Destroy(transform.root.gameObject);
             isCorrected = true;
         }

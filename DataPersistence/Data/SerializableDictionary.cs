@@ -1,40 +1,59 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// JSONでシリアライズ可能なDictionaryクラス
+/// シリアライズ可能なDictionaryクラス
 /// </summary>
-/// <typeparam name="TKey"></typeparam>
-/// <typeparam name="TValue"></typeparam>
-[System.Serializable]
+[Serializable]
 public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 {
-    [SerializeField] List<TKey> keys = new();
-    [SerializeField] List<TValue> values = new();
+    [Serializable]
+    public class Pair
+    {
+        public TKey key = default;
+        public TValue value = default;
+
+        public Pair(TKey key, TValue value)
+        {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    //実態としてはキーとバリューを持つこのリストに出し入れする
+    [SerializeField] List<Pair> pairs = new();
+
+    public static SerializableDictionary<TKey, TValue> ToDictionary(List<Pair> pairs)
+    {
+        SerializableDictionary<TKey, TValue> dic = new();
+
+        foreach (var pair in pairs)
+        {
+            if (dic.ContainsKey(pair.key)) continue;
+            dic.Add(pair.key, pair.value);
+        }
+
+        return dic;
+    }
 
     public void OnAfterDeserialize()
     {
         this.Clear();
 
-        if (keys.Count != values.Count)
+        foreach(var pair in pairs)
         {
-            Debug.LogError($"デシリアライズの際に何らかのエラーが発生しました。キーのサイズ{keys.Count}と値のサイズが異なります{values.Count}");
-        }
-
-        for(var i = 0; i < keys.Count; i++)
-        {
-            this.Add(keys[i], values[i]);
+            this.Add(pair.key, pair.value);
         }
     }
 
     public void OnBeforeSerialize()
     {
-        keys.Clear();
-        values.Clear();
+        pairs.Clear();
+        
         foreach(var pair in this)
         {
-            keys.Add(pair.Key);
-            values.Add(pair.Value);
+            pairs.Add(new Pair(pair.Key, pair.Value));
         }
     }
 }

@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,6 +40,6 @@ public class SavePoint : AbstractInteractable
         }
 
         //メインメニューを表示
-        inGameMenu.ActivateMainMenu();
+        inGameMenu.ActivateMainMenu(true);
     }
 }

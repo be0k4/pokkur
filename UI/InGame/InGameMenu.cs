@@ -101,11 +101,13 @@ public class InGameMenu : MonoBehaviour
         ActivateOptionMenu();
         DeactiveMainMenu();
     }
-    public void ActivateMainMenu()
+
+    /// <param name="paused">最初に開くときにtrue、他の画面から戻って来る場合はfalse</param>
+    public void ActivateMainMenu(bool paused)
     {
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
         this.mainMenu.gameObject.SetActive(true);
-        timeScale = (int)Time.timeScale;
+        if (paused) timeScale = (int)Time.timeScale;
         Time.timeScale = 0;
         GameManager.Invalid = true;
 
@@ -133,7 +135,7 @@ public class InGameMenu : MonoBehaviour
     public void OnBackClickedInSaveSlotsMenu()
     {
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
-        ActivateMainMenu();
+        ActivateMainMenu(false);
         DeactiveSaveSlotsMenu();
     }
 
@@ -241,7 +243,7 @@ public class InGameMenu : MonoBehaviour
     public void OnBackClickedInOption()
     {
         SEAudioManager.instance.PlaySE(SEAudioManager.instance.click);
-        ActivateMainMenu();
+        ActivateMainMenu(false);
         DeactiveOptionMenu();
         //セーブ
         ConfigData configData =

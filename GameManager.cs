@@ -84,6 +84,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
     //画面暗転用のパネル
     [SerializeField] RectTransform blackOut;
     const string blackOutTrigger = "blackOutTrigger";
+    const string fadeOutTrigger = "fadeOutTrigger";
     //ゲームメニュー
     [SerializeField] InGameMenu inGameMenu;
     //日付の表示
@@ -128,8 +129,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
     async UniTask Start()
     {
-        //ロード中に暗転アニメーションを流す
-        BlackOut();
         //乱数の初期化
         Random.InitState(DateTime.Now.Second);
         //ロードを待機
@@ -164,6 +163,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
         expBars = statusWindow.GetComponentsInChildren<Slider>().ToList().ToDictionary(e => e.name);
         SetDayText();
         UpdateParty();
+        FadeOut();
     }
 
     void Update()
@@ -186,7 +186,7 @@ public class GameManager : MonoBehaviour, IDataPersistence
 
         if (Input.GetKeyDown(KeyCode.Tab)) ManageInventory();
 
-        if (Input.GetKeyDown(KeyCode.Escape)) inGameMenu.ActivateMainMenu();
+        if (Input.GetKeyDown(KeyCode.Escape)) inGameMenu.ActivateMainMenu(true);
     }
 
     /// <summary>
@@ -195,6 +195,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     public void BlackOut()
     {
         blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
+    }
+
+    public void FadeOut()
+    {
+        blackOut.GetComponent<Animator>().SetTrigger(fadeOutTrigger);
     }
 
     /// <summary>

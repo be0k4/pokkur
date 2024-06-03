@@ -63,6 +63,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
     [Header("UI")]
     //ステータスウィンドウ
     [SerializeField] RectTransform statusWindow;
+    //バフとアイコンのディクショナリ
+    [SerializeField] List<SerializableDictionary<Buffs, Sprite>.Pair> pairs;
+    SerializableDictionary<Buffs, Sprite> buffDic;
+    //バフアイコン
+    [SerializeField] RectTransform buffIcons;
     //Expバー
     Dictionary<string, Slider> expBars;
     //追従の切り替えチェックボックス
@@ -131,8 +136,14 @@ public class GameManager : MonoBehaviour, IDataPersistence
     {
         //乱数の初期化
         Random.InitState(DateTime.Now.Second);
+
+        //フィールドの初期化
+        buffDic = SerializableDictionary<Buffs, Sprite>.ToDictionary(pairs);
+        expBars = statusWindow.GetComponentsInChildren<Slider>().ToList().ToDictionary(e => e.name);
+
         //ロードを待機
         await UniTask.WaitWhile(() => Invalid);
+
         //天候の初期化とBGMの再生
         switch (weatherState)
         {
@@ -160,7 +171,6 @@ public class GameManager : MonoBehaviour, IDataPersistence
                 break;
         }
 
-        expBars = statusWindow.GetComponentsInChildren<Slider>().ToList().ToDictionary(e => e.name);
         SetDayText();
         UpdateParty();
         FadeOut();
@@ -197,6 +207,9 @@ public class GameManager : MonoBehaviour, IDataPersistence
         blackOut.GetComponent<Animator>().SetTrigger(blackOutTrigger);
     }
 
+    /// <summary>
+    /// シーン遷移時の黒幕フェードアウト
+    /// </summary>
     public void FadeOut()
     {
         blackOut.GetComponent<Animator>().SetTrigger(fadeOutTrigger);
@@ -228,12 +241,11 @@ public class GameManager : MonoBehaviour, IDataPersistence
         {
             directionalLight.enabled = false;
             //雨のインスタンスを作成
-            var handle = rainPrefab.LoadAssetAsync<GameObject>();
-            var prefab = await handle.Task;
-            var instance = Instantiate(prefab);
-            Addressables.Release(handle);
+            AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(rainPrefab);
+            handle.Completed += (handle) => handle.Result.AddComponent<SelfCleanup>();
+            GameObject instance = await handle.Task;
 
-            //メソッド呼び出し後にデリゲートを解除する
+            //天候インスタンスの破棄後にデリゲート（自身）を解除する
             Action handler = null;
             handler = () =>
             {
@@ -438,17 +450,28 @@ public class GameManager : MonoBehaviour, IDataPersistence
         expBars["DefExp"].maxValue = CreatureStatus.needExpDic[Mathf.Min(100, status.Guard + 1)];
         expBars["DefExp"].value = status.DefExp;
 
+        //バフアイコンの設定
+        var icons = this.buffIcons.GetComponentsInChildren<Image>();
+        for(var i = 0; i < icons.Length; ++i)
+        {
+            if(i < status.Buffs.Count)
+            {
+                icons[i].color = new Color32(255, 255, 255, 255);
+                icons[i].sprite = buffDic[status.Buffs[i]];
+            }
+            else
+            {
+                icons[i].color = new Color32(255, 255, 255, 0);
+                icons[i].sprite = null;
+            }
+        }
+
         //パラメータの更新
         int attackDmg = Mathf.RoundToInt(target.GetComponentInChildren<AttackCalculater>().CalculateAttackDamage());
-        StringBuilder sb = new();
-        foreach (var buff in status.Buffs)
-        {
-            sb.Append($"　{buff}");
-        }
-        parameterText.text = $"{status.Species}\n{status.MaxHealthPoint}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}\n{status.SlashResist}\n{status.StabResist}\n{status.StrikeResist}\n{sb}";
+        parameterText.text = $"{status.Species}\n{status.MaxHealthPoint}\n{status.Power}(ダメージ{attackDmg})\n{status.Dexterity}\n{status.Toughness}\n{status.AttackSpeed}\n{status.Guard}\n{status.SlashResist}\n{status.StabResist}\n{status.StrikeResist}";
 
         //スキルとスキル説明の更新
-        for (int i = 0; i < this.skills.Length; i++)
+        for (int i = 0; i < this.skills.Length; ++i)
         {
             if (i < status.Skills?.Count)
             {

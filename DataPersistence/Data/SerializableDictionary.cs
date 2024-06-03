@@ -41,7 +41,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
     {
         this.Clear();
 
-        foreach(var pair in pairs)
+        foreach (var pair in pairs)
         {
             this.Add(pair.key, pair.value);
         }
@@ -50,8 +50,8 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
     public void OnBeforeSerialize()
     {
         pairs.Clear();
-        
-        foreach(var pair in this)
+
+        foreach (var pair in this)
         {
             pairs.Add(new Pair(pair.Key, pair.Value));
         }

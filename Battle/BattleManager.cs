@@ -75,6 +75,9 @@ public class BattleManager : MonoBehaviour
         {
             toughness = creatureStatus.Toughness * 0.01f;
         }
+        //バフの補正をかける
+        Buff.TougnessBuff(creatureStatus.Buffs, ref toughness);
+
         return toughness;
     }
 
@@ -88,12 +91,12 @@ public class BattleManager : MonoBehaviour
         //ガード不可、攻撃中、怯み中はガードできない
         if (creatureStatus.CanGuard is false || creatureStatus.IsAttaking || creatureStatus.HitactionFlag) return false;
         //整数に四捨五入
-        //ダメージは限界ステータスで100 + 武器ダメージ(スキル効果等は除く)
-        //midは限界ステータスで180
         var mid = Mathf.RoundToInt((creatureStatus.Guard + creatureStatus.Dexterity * 0.8f - damage));
         //1~90%の確率
         var guard = Mathf.Clamp(mid, 1, 90);
+        //バフの補正をかける
         Buff.GuardBuff(creatureStatus.Buffs, ref guard);
+
         if (guard >= UnityEngine.Random.Range(1, 101))
         {
             //防御成功

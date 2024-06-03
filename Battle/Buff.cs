@@ -50,11 +50,11 @@ public class Buff : MonoBehaviour
     }
 
     /// <summary>
-    /// 攻撃力を上昇させる
+    /// 攻撃力を1.3倍上昇させる
     /// </summary>
     public static void DamageBuff(List<Buffs> buffs, ref float damage)
     {
-        if (buffs.Contains(Buffs.ダメージ)) damage *= 1.3f;
+        if (buffs.Contains(Buffs.Damage)) damage *= 1.3f;
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class Buff : MonoBehaviour
     /// </summary>
     public static void GuardBuff(List<Buffs> buffs, ref int guard)
     {
-        if (buffs.Contains(Buffs.防御)) guard = Mathf.Max(20, guard);
+        if (buffs.Contains(Buffs.Guard)) guard = Mathf.Max(20, guard);
     }
 
     /// <summary>
@@ -70,14 +70,14 @@ public class Buff : MonoBehaviour
     /// </summary>
     public static void TougnessBuff(List<Buffs> buffs, ref float toughness)
     {
-        if (buffs.Contains(Buffs.頑丈)) toughness += 0.1f;
+        if (buffs.Contains(Buffs.Toughness)) toughness += 0.1f;
     }
 }
 
 public enum Buffs
 {
     //バフと関連するステータス名
-    ダメージ,
-    防御,
-    頑丈
+    Damage,
+    Guard,
+    Toughness
 }
